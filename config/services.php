@@ -34,5 +34,12 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-
+    'hemis'=> [
+        'client_id'=> env('HEMIS_CLIENT_ID'),
+        'client_secret' => env('HEMIS_CLIENT_SECRET'),
+        'redirect' => env('HEMIS_REDIRECT_URI'),
+        'url_authorize' => env('HEMIS_AUTH_URL'),
+        'url_token' => env('HEMIS_TOKEN_URL'),
+        'url_resource' => env('HEMIS_RESOURCE_URL')
+        ],
 ];

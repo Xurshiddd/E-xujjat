@@ -16,6 +16,11 @@ class FolderRepository
         $this->folder = $folder;
     }
     public function allFolder(){
-        return $this->folder->where('id', Auth::id())->paginate(10);
+        return $this->folder->where('user_id', Auth::id())->paginate(2);
+    }
+    public function createFolder($data){
+        $data['user_id'] = Auth::id();
+        $res = $this->folder->create($data);
+        return $res;
     }
 }
