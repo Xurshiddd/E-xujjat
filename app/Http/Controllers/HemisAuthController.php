@@ -1,4 +1,6 @@
-<?php
+<?php 
+use Hash;
+?><?php
 
 namespace App\Http\Controllers;
 
@@ -6,6 +8,7 @@ use App\Services\HemisOAuthClientService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Log;
 
 class HemisAuthController extends Controller
@@ -47,7 +50,7 @@ class HemisAuthController extends Controller
             $user = User::create([
                 'name' => $userData['name'],
                 'email' => $userData['email'] ?? strtolower($userData['firstname']).'@gmail.com', 
-                'password' => $userData['passport_number'], // Temporary password
+                'password' => Hash::make($userData['passport_number']), // Temporary password
                 'hemis_id_number' => $userData['employee_id_number'],
                 'is_admin' => false, // Default value, adjust as needed
                 'avatar' => $userData['picture'] ?? null,
