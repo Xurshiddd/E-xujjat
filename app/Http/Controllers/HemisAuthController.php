@@ -14,19 +14,22 @@ class HemisAuthController extends Controller
     public function redirectToHemis()
     {
         $authorizationUrl = $this->service->provider()->getAuthorizationUrl();
-        session(['oauth2state' => $this->service->provider()->getState()]);
+        $state = $this->service->provider()->getState();
+        cookie()->queue('oauth2state', $state, 10);
         return redirect()->away($authorizationUrl);
     }
     public function login(Request $request)
     {
+        $cookieState = $request->cookie('oauth2state');
         Log::info('Hemis login attempt', [
             'state' => $request->state,
             'code' => $request->code,
         ]);
-        Log::info('session state', [
-            'oauth2state' => session('oauth2state'),
+        Log::info('cookie state', [
+            'oauth2state' => $cookieState,
         ]);
-        if ($request->state !== session('oauth2state')) {
+        
+        if ($request->state !== $cookieState) {
             return abort(403, 'Invalid state');
         }
         try {
