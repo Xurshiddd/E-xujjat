@@ -41,5 +41,5 @@ return [
         'url_authorize' => env('HEMIS_AUTH_URL'),
         'url_token' => env('HEMIS_TOKEN_URL'),
         'url_resource' => env('HEMIS_RESOURCE_URL')
-        ],
+    ],
 ];
