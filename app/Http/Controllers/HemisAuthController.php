@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Services\HemisOAuthClientService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 use Log;
 
 class HemisAuthController extends Controller
@@ -23,13 +25,6 @@ class HemisAuthController extends Controller
     }
     public function login(Request $request)
     {
-        Log::info('Hemis login attempt', [
-            'state' => $request->state,
-            'code' => $request->code,
-        ]);
-        Log::info('session state', [
-            'oauth2state' => session('oauth2state'),
-        ]);
         if ($request->state !== session('oauth2state')) {
             return abort(403, 'Invalid state');
         }
@@ -40,9 +35,35 @@ class HemisAuthController extends Controller
             
             $resourceOwner = $this->service->provider()->getResourceOwner($accessToken);
             $userData = $resourceOwner->toArray();
-            dd($userData);
+            // dd($userData);
+            if (!$userData) {
+                return abort(500, 'Failed to retrieve user data from Hemis');
+            }
+            $user = User::where('hemis_id_number', $userData['employee_id_number'])->first();
+            if ($user){
+                Auth::login($user);
+                return redirect()->route('dashboard');
+            }
+            $user = User::create([
+                'name' => $userData['name'],
+                'email' => $userData['email'] ?? strtolower($userData['firstname']).'@gmail.com', 
+                'password' => $userData['passport_number'], // Temporary password
+                'hemis_id_number' => $userData['employee_id_number'],
+                'is_admin' => false, // Default value, adjust as needed
+                'avatar' => $userData['picture'] ?? null,
+                'phone' => $userData['phone'] ?? null,
+                'department' => $userData['departments']['department']['name'] ?? null,
+                'staffPosition' => $userData['departments']['staffPosition']['name'] ?? null,
+            ]);
+            Auth::login($user);
+            Log::info('User created and logged in', [
+                'user_id' => $user->id,
+                'hemis_id_number' => $user->hemis_id_number,
+                'email' => $user->email,
+            ]);
+            return redirect()->route('dashboard');
         }catch (\Exception $e) {
-            return abort(500, 'Error during authentication: ' . $e->getMessage());
+            return redirect()->route('home')->withErrors(['error' => 'Failed to login with Hemis: ' . $e->getMessage()]);
         }
     }
 }

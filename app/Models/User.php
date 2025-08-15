@@ -21,6 +21,12 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'hemis_id_number',
+        'is_admin',
+        'avatar',
+        'phone',
+        'department',
+        'staffPosition'
     ];
 
     /**
