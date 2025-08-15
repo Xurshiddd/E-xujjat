@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Archive\StoreRequest;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Services\ArchiveService;
 
 class ArchiveController extends Controller
 {
+    public function __construct(protected ArchiveService $archiveService)
+    {}
     public function index()
     {
-        return Inertia::render('Archives/Index');
+        $archive = $this->archiveService->getAllArchives();
+        return Inertia::render('Archives/Index', ['archives' => $archive]);
     }
 
     public function show($id)
@@ -22,9 +27,9 @@ class ArchiveController extends Controller
         return Inertia::render('Archives/Create');
     }
 
-    public function store(Request $request)
+    public function store(StoreRequest $request)
     {
-        // Logic to store the archive
+        $this->archiveService->saveArchive($request->all());
         return redirect()->route('archives.index')->with('success', 'Archive created successfully');
     }
 }

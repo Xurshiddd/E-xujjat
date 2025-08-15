@@ -35,13 +35,17 @@ class HemisAuthController extends Controller
             
             $resourceOwner = $this->service->provider()->getResourceOwner($accessToken);
             $userData = $resourceOwner->toArray();
-            // dd($userData);
             if (!$userData) {
                 return abort(500, 'Failed to retrieve user data from Hemis');
             }
             $user = User::where('hemis_id_number', $userData['employee_id_number'])->first();
             if ($user){
                 Auth::login($user);
+                Log::info('User created and logged in', [
+                'user_id' => $user->id,
+                'hemis_id_number' => $user->hemis_id_number,
+                'email' => $user->email,
+            ]);
                 return redirect()->route('dashboard');
             }
             $user = User::create([
@@ -55,12 +59,10 @@ class HemisAuthController extends Controller
                 'department' => $userData['departments']['department']['name'] ?? null,
                 'staffPosition' => $userData['departments']['staffPosition']['name'] ?? null,
             ]);
-            Auth::login($user);
             Log::info('User created and logged in', [
-                'user_id' => $user->id,
-                'hemis_id_number' => $user->hemis_id_number,
-                'email' => $user->email,
+                'user_data' => $userData,
             ]);
+            Auth::login($user);
             return redirect()->route('dashboard');
         }catch (\Exception $e) {
             return redirect()->route('home')->withErrors(['error' => 'Failed to login with Hemis: ' . $e->getMessage()]);

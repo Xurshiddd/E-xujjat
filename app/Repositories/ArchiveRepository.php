@@ -13,4 +13,12 @@ class ArchiveRepository
     {
         //
     }
+    public function AllArchives(): array
+    {
+        return $this->archive->with(['folder', 'user', 'category'])->get()->toArray();
+    }
+    public function CreateArchive(array $data): Archive
+    {
+        return $this->archive->create($data);
+    }
 }

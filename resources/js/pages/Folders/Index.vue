@@ -102,16 +102,17 @@ function createFolder() {
         <span v-if="index < breadcrumbs.length - 1">/</span>
       </span>
     </nav>
-
+<div>
+  <button @click="openModal" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center transition-colors">
+                          <i class="fas fa-plus mr-2"></i> New Folder
+                      </button>
+                    </div>
     <div v-if="props.folders.data.length > 0" class="space-y-4">
       <div class="container mx-auto px-4 py-8 max-w-6xl">
           <div class="bg-white rounded-xl shadow-md overflow-hidden">
               <div class="p-6">
                   <div class="flex justify-between items-center mb-6">
                       <h1 class="text-2xl font-bold text-gray-800">Folder Manager</h1>
-                      <button @click="openModal" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center transition-colors">
-                          <i class="fas fa-plus mr-2"></i> New Folder
-                      </button>
                   </div>
                   
                   <div class="relative overflow-x-auto responsive-table">
