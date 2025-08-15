@@ -14,7 +14,7 @@ Route::get('/hemis/redirect', [HemisAuthController::class, 'redirectToHemis'])->
 Route::get('/hemis/callback', [HemisAuthController::class, 'login'])->name('hemis.callback');
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware('auth')->name('dashboard');
 Route::resources([
     'folders' => FolderController::class,
     'archives' => ArchiveController::class,
