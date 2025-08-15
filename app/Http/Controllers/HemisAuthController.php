@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\HemisOAuthClientService;
 use Illuminate\Http\Request;
+use Log;
 
 class HemisAuthController extends Controller
 {
@@ -18,6 +19,13 @@ class HemisAuthController extends Controller
     }
     public function login(Request $request)
     {
+        Log::info('Hemis login attempt', [
+            'state' => $request->state,
+            'code' => $request->code,
+        ]);
+        Log::info('session state', [
+            'oauth2state' => session('oauth2state'),
+        ]);
         if ($request->state !== session('oauth2state')) {
             return abort(403, 'Invalid state');
         }
