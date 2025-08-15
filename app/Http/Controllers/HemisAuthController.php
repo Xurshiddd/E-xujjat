@@ -15,6 +15,10 @@ class HemisAuthController extends Controller
     {
         $authorizationUrl = $this->service->provider()->getAuthorizationUrl();
         $state = $this->service->provider()->getState();
+        Log::info('Redirecting to Hemis', [
+            'authorizationUrl' => $authorizationUrl,
+            'state' => $state,
+        ]);
         cookie()->queue('oauth2state', $state, 10);
         return redirect()->away($authorizationUrl);
     }
