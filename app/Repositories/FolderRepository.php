@@ -16,7 +16,7 @@ class FolderRepository
         $this->folder = $folder;
     }
     public function allFolder(){
-        return $this->folder->where('user_id', Auth::id())->paginate(2);
+        return $this->folder->where('user_id', Auth::id())->with('archives')->paginate(10);
     }
     public function createFolder($data){
         $data['user_id'] = Auth::id();

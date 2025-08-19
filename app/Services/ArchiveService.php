@@ -5,6 +5,8 @@ use App\Events\AttachmentEvent;
 use App\Repositories\ArchiveRepository;
 use App\Models\Archive;
 use App\Services\AttachmentService;
+use Illuminate\Http\Request;
+
 class ArchiveService
 {
     /**
@@ -18,12 +20,24 @@ class ArchiveService
     {
         return $this->archiveRepository->AllArchives();
     }
-    public function saveArchive($data): Archive
+    public function saveArchive(Request $request): array
     {
+        $archives = [];
+        $data = $request->all();
         $data['user_id'] = auth()->id();
-        $c_data = $data->except(['files']);
-        $archive = $this->archiveRepository->CreateArchive($c_data);
-        event((new AttachmentEvent($data['files'], $archive->files(), 'archives')));
-        return $archive;
+
+        $c_data = collect($data)->except(['files'])->toArray();
+
+        foreach ($request->file('files') as $file) {
+            $c_data['name'] = $file->getClientOriginalName();
+            $archive = $this->archiveRepository->createArchive($c_data);
+            $archives[] = $archive;
+
+            // Har bir faylni AttachmentEvent ga jo‘natamiz
+            event(new AttachmentEvent([$file], $archive->file(), 'archives'));
+        }
+
+        return $archives;
     }
+
 }

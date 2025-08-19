@@ -7,7 +7,11 @@ use Illuminate\Support\Facades\Log;
 class FolderService {
     public function __construct(private FolderRepository $folderRepository) {}
     public function getAll(){
-        return $this->folderRepository->allFolder();
+        $data = $this->folderRepository->allFolder();
+        foreach ($data as $key => $value) {
+            $value['size'] = $value->archives->sum('file.size'); // Example to sum the sizes of files in each archive
+        }
+        return collect($data);
     }
     public function saveFolder($data){
         try {

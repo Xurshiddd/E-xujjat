@@ -4,15 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Folder\Storerequest;
 use App\Services\FolderService;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
-use SebastianBergmann\Complexity\Complexity;
 
 class FolderController extends Controller
 {
     public function __construct(private FolderService $service){}
     public function index()
     {
+        // dd($this->service->getAll()[4]->archives->sum('file.size')); // Example to check the archives of the 5th folder
         return Inertia::render("Folders/Index", [
             "folders" => $this->service->getAll(),
         ]);

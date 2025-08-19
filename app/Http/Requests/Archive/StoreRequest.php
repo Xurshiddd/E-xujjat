@@ -11,7 +11,7 @@ class StoreRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,11 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            "files" => "required|array",
+            "files.*" => "file|mimes:jpg,jpeg,png,pdf,doc,docx,mp3,m4a,wav,zip.rar|max:20480",
+            "category_id" => "required|exists:categories,id",
+            "folder_id" => "required|exists:folders,id"
         ];
+
     }
 }

@@ -8,11 +8,17 @@ import axios from 'axios'
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Papkalar', href: '/folders' },
 ]
-
+function formatFileSize(bytes: number) {
+  if (bytes === 0) return '0 B';
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + sizes[i];
+}
 type Folder = {
   id: number
   name: string
   code: string
+  size: number
   user_id: number
   created_at: Date
 }
@@ -156,7 +162,7 @@ function createFolder() {
                                   </td>
                                   <td class="px-6 py-4">{{ new Date(folder.created_at).toLocaleDateString() }}</td>
                                   <td class="px-6 py-4">Folder</td>
-                                  <td class="px-6 py-4">N/A</td>
+                                  <td class="px-6 py-4">{{ formatFileSize(folder.size) }}</td>
                                   <td class="px-6 py-4">
                           <div class="flex space-x-2">
                               <button class="text-blue-500 hover:text-blue-700" title="Open">

@@ -42,7 +42,7 @@ class Archive extends Model
     {
         return $this->belongsTo(Category::class);
     }
-    public function files(): MorphOne
+    public function file(): MorphOne
     {
         return $this->morphOne(Attachment::class, 'attachment');
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Archive\StoreRequest;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Services\ArchiveService;
@@ -10,11 +11,12 @@ use App\Services\ArchiveService;
 class ArchiveController extends Controller
 {
     public function __construct(protected ArchiveService $archiveService)
-    {}
+    {
+    }
     public function index()
     {
-        $archive = $this->archiveService->getAllArchives();
-        return Inertia::render('Archives/Index', ['archives' => $archive]);
+        $archives = $this->archiveService->getAllArchives();
+        return Inertia::render('Archives/Index', ['archives' => $archives]);
     }
 
     public function show($id)
@@ -24,12 +26,22 @@ class ArchiveController extends Controller
 
     public function create()
     {
-        return Inertia::render('Archives/Create');
+        return Inertia::render('Archives/Create', ['categories' => Category::all(), 'folders' => auth()->user()->folders]);
     }
 
     public function store(StoreRequest $request)
     {
-        $this->archiveService->saveArchive($request->all());
-        return redirect()->route('archives.index')->with('success', 'Archive created successfully');
+        try {
+            $archives = $this->archiveService->saveArchive($request);
+            return response()->json([
+                'success' => 'Archive created successfully',
+                'data' => $archives
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to create archive: ' . $e->getMessage()
+            ], 500);
+        }
     }
+
 }

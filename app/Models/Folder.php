@@ -27,4 +27,8 @@ class Folder extends Model
             }
         });
     }
+    public function archives()
+    {
+        return $this->hasMany(Archive::class);
+    }
 }
