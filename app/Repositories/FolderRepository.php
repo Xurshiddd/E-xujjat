@@ -23,4 +23,8 @@ class FolderRepository
         $res = $this->folder->create($data);
         return $res;
     }
+    public function showFolder($id)
+    {
+        return $this->folder->where('id', $id)->where('user_id', Auth::id())->with('archives')->first();
+    }
 }

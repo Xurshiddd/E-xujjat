@@ -22,4 +22,17 @@ class FolderService {
             return false;
         }
     }
+    public function getById($id){
+        try {
+            $response = $this->folderRepository->showFolder($id);
+            $response['size'] = format_file_size($response->archives->sum('file.size'));// Assuming you have a helper function to format file size
+            foreach ($response->archives as $archive) {
+                $archive->file->size = format_file_size($archive->file->size ?? 0); // Format each file size
+            }
+            return $response;
+        } catch (\Throwable $th) {
+            Log::error($th->getMessage());
+            return false;
+        }
+    }
 }

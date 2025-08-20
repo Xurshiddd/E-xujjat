@@ -39,5 +39,9 @@ class ArchiveService
 
         return $archives;
     }
+    public function deleteArchive($id)
+    {
+        return $this->archiveRepository->DeleteArchive($id);
+    }
 
 }

@@ -166,7 +166,7 @@ function createFolder() {
                                   <td class="px-6 py-4">
                           <div class="flex space-x-2">
                               <button class="text-blue-500 hover:text-blue-700" title="Open">
-                                  <i class="fas fa-folder-open"></i>
+                                  <a :href="route('folders.show', folder.id)"><i class="fas fa-folder-open"></i></a>
                               </button>
                               <button class="text-green-500 hover:text-green-700" title="Share">
                                   <i class="fas fa-share-alt"></i>

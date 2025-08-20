@@ -29,4 +29,10 @@ class FolderController extends Controller
             ], 500);
         }
     }
+    public function show($id)
+    {
+        return Inertia::render("Folders/Show", [
+            "folder" => $this->service->getById($id),
+        ]);
+    }
 }

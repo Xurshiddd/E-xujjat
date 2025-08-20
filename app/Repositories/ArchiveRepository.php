@@ -3,13 +3,14 @@
 namespace App\Repositories;
 
 use App\Models\Archive;
+use App\Services\AttachmentService;
 
 class ArchiveRepository
 {
     /**
      * Create a new class instance.
      */
-    public function __construct(private Archive $archive)
+    public function __construct(private Archive $archive, private AttachmentService $attachmentService)
     {
         //
     }
@@ -20,5 +21,16 @@ class ArchiveRepository
     public function CreateArchive(array $data): Archive
     {
         return $this->archive->create($data);
+    }
+    public function DeleteArchive(int $id): bool
+    {
+        $archive = $this->archive->find($id);
+        if ($archive) {
+            if ($archive->file != null) {
+                $this->attachmentService->destroy($archive->file);
+            }
+            $archive->delete();
+        }
+        return $archive ? true : false;
     }
 }

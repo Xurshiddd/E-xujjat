@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
+import axios from 'axios'
+import { ref } from 'vue'
+
 type File = {
   id: number
   title: string
@@ -25,8 +28,29 @@ interface Archive {
 interface Props {
   archives: Archive[]
 }
-
 const props = defineProps<Props>()
+const archives = ref(props.archives)
+
+function deleteArchive(id: number) {
+  axios.delete(`/archives/${id}`, {
+    headers: {
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+    }
+  })
+    .then(() => {
+      // page reload
+      window.location.reload()
+    })
+    .catch(error => {
+      console.error("Arxiv o'chirishda xato:", error)
+      alert("Arxiv o'chirishda xato yuz berdi.")
+    })
+}
+function confirmDelete(id: number) {
+  if (confirm("Arxivni o‘chirishga ishonchingiz komilmi?")) {
+    deleteArchive(id)
+  }
+}
 </script>
 
 <template>
@@ -66,6 +90,13 @@ const props = defineProps<Props>()
                     <a :href="`/storage/${archive.file?.path}`" v-if="archive.file" class="text-blue-500 hover:text-blue-700 mr-2" title="Ko‘rish" target="_blank">
                       <i class="fas fa-eye"></i>
                     </a>
+                    <button
+                      class="text-red-500 hover:text-red-700"
+                      @click="confirmDelete(archive.id)"
+                      title="O‘chirish"
+                    >
+                      <i class="fas fa-trash"></i>
+                    </button>
                   </td>
                 </tr>
               </tbody>

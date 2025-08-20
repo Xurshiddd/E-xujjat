@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Archive\StoreRequest;
+use App\Models\Archive;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -43,5 +44,19 @@ class ArchiveController extends Controller
             ], 500);
         }
     }
-
+    public function destroy($id)
+    {
+        $arch = Archive::find($id);
+        try {
+            $result = $this->archiveService->deleteArchive($id);
+            // dd($result);
+            if ($result) {
+                return response()->json(['success' => 'Archive deleted successfully'], 200);
+            } else {
+                return response()->json(['error' => 'Archive not found'], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to delete archive: ' . $e->getMessage()], 500);
+        }
+    }
 }
