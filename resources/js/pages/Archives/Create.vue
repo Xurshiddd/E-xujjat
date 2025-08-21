@@ -37,8 +37,7 @@ function handleFiles(event: Event) {
   const files = (event.target as HTMLInputElement).files
   if (files) {
     const arr = Array.from(files)
-    // 20 MB = 20 * 1024 * 1024 = 20971520 bytes
-    const filtered = arr.filter(f => f.size <= 20971520)
+    const filtered = arr.filter(f => f.size <= 50971520)
     if (filtered.length < arr.length) {
       alert('Fayl hajmi 20 MB dan oshmasligi kerak!')
     }
@@ -58,10 +57,7 @@ function closeNewFolderModal() {
 }
 function confirmNewFolder() {
   if (newFolderName.value.trim()) {
-    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-    axios.post('/folders', { name: newFolderName.value.trim() }, {
-      headers: { 'X-CSRF-TOKEN': csrf }
-    })
+    axios.post('/folders', { name: newFolderName.value.trim() })
       .then(response => {
         folders.push(response.data.data)
         selectFolder(response.data.data)
@@ -95,7 +91,6 @@ function submitFiles() {
     alert('Please select at least one file to upload')
     return
   }
-  const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
   const formData = new FormData()
   formData.append('folder_id', selectedFolder.value.id.toString())
   formData.append('category_id', selectedCategory.value.toString())
@@ -104,8 +99,7 @@ function submitFiles() {
   })
   axios.post('/archives', formData, {
     headers: {
-      'Content-Type': 'multipart/form-data',
-      'X-CSRF-TOKEN': csrf || ''
+      'Content-Type': 'multipart/form-data'
     }
   }).then(response => {
     showResponse(response.data.data?.message || 'Files uploaded successfully!', false)
@@ -139,7 +133,7 @@ function submitFiles() {
       <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
         <h1 class="text-3xl font-bold text-gray-800 mb-2">Upload Your Files</h1>
         <p class="text-gray-600 mb-6">Select folder and category for better organization</p>
-        
+
         <!-- Folder Selection -->
         <div class="mb-8">
           <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
@@ -165,7 +159,7 @@ function submitFiles() {
             </button>
           </div>
         </div>
-        
+
         <!-- Category Selection -->
         <div class="mb-8">
           <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
@@ -186,7 +180,7 @@ function submitFiles() {
             </div>
           </div>
         </div>
-        
+
         <!-- File Upload Area -->
         <div class="mb-6">
           <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
@@ -221,7 +215,7 @@ function submitFiles() {
             </div>
           </div>
         </div>
-        
+
         <!-- Summary and Submit -->
         <div class="bg-gray-50 p-4 rounded-lg">
           <h3 class="font-medium text-gray-700 mb-2">Upload Summary:</h3>

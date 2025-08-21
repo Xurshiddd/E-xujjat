@@ -23,7 +23,7 @@ class StoreRequest extends FormRequest
     {
         return [
             "files" => "required|array",
-            "files.*" => "file|mimes:jpg,jpeg,png,pdf,doc,docx,mp3,m4a,wav,zip.rar|max:20480",
+            "files.*" => "file|mimes:jpg,jpeg,png,pdf,doc,docx,mp3,m4a,wav,zip.rar|max:51200",
             "category_id" => "required|exists:categories,id",
             "folder_id" => "required|exists:folders,id"
         ];

@@ -52,6 +52,10 @@ const newFolderName = ref('')
 const responseMessage = ref('')
 const errorMessage = ref('')
 
+const editModal = ref(false)
+const editFolderName = ref('')
+const editingFolderId = ref<number|null>(null)
+
 function openModal() {
   showModal.value = true
 }
@@ -69,24 +73,77 @@ function showError(msg: string) {
 }
 
 function createFolder() {
-  const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
   axios.post('/folders', {
     name: newFolderName.value,
-  }, {
-    headers: {
-      'X-CSRF-TOKEN': csrf
-    }
-  }).then(response => {
-    // push qilishda response.data.data ishlatiladi
+  },{
+     maxContentLength: Infinity,
+  maxBodyLength: Infinity,
+  })
+  .then(response => {
+    // Folders ro‘yxatiga qo‘shish
     props.folders.data.push(response.data.data)
+
+    // Inputni tozalash
+    newFolderName.value = ''
+
+    // Modalni yopish
     closeModal()
+
+    // Xabar chiqarish
     showResponse(response.data.message || 'Papka muvaffaqiyatli yaratildi!')
-  }).catch(error => {
+  })
+  .catch(error => {
     showError(error.response?.data?.message || 'Xatolik: papka yaratilmagan!')
     console.error('Error creating folder:', error)
   })
-  newFolderName.value = ''
-  closeModal()
+}
+
+function deleteFolder(id: number){
+    axios.delete(`/folders/${id}`,{
+        headers: {
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+    }
+    }).then(response => {
+      window.location.reload()
+    // alert(response.data.message)
+    })
+    .catch(error => {
+      console.error("Papka o'chirishda xato:", error)
+      alert("Papka o'chirishda xato yuz berdi.")
+    })
+}
+function confirmDelete(id: number) {
+  if (confirm("Papkani o‘chirishga ishonchingiz komilmi?")) {
+    deleteFolder(id)
+  }
+}
+
+function openEditModal(folder: Folder) {
+  editFolderName.value = folder.name
+  editingFolderId.value = folder.id
+  editModal.value = true
+}
+function closeEditModal() {
+  editModal.value = false
+  editFolderName.value = ''
+  editingFolderId.value = null
+}
+function updateFolder() {
+  if (!editingFolderId.value) return
+  axios.put(`/folders/${editingFolderId.value}`, {
+    name: editFolderName.value,
+  })
+  .then(response => {
+    const idx = props.folders.data.findIndex(f => f.id === editingFolderId.value)
+    if (idx !== -1) props.folders.data[idx].name = editFolderName.value
+
+    closeEditModal()
+    showResponse(response.data.message || 'Papka nomi o‘zgartirildi!')
+  })
+  .catch(error => {
+    showError(error.response?.data?.message || 'Xatolik: papka nomi o‘zgartirilmadi!')
+    console.error('Error updating folder:', error)
+  })
 }
 </script>
 
@@ -120,7 +177,7 @@ function createFolder() {
                   <div class="flex justify-between items-center mb-6">
                       <h1 class="text-2xl font-bold text-gray-800">Folder Manager</h1>
                   </div>
-                  
+
                   <div class="relative overflow-x-auto responsive-table">
                       <table class="w-full text-sm text-left text-gray-500">
                           <thead class="text-xs text-gray-700 uppercase bg-gray-100">
@@ -171,8 +228,11 @@ function createFolder() {
                               <button class="text-green-500 hover:text-green-700" title="Share">
                                   <i class="fas fa-share-alt"></i>
                               </button>
-                              <button class="text-red-500 hover:text-red-700" title="Delete">
+                              <button class="text-red-500 hover:text-red-700" @click="confirmDelete(folder.id)" title="Delete">
                                   <i class="fas fa-trash-alt"></i>
+                              </button>
+                              <button class="text-yellow-500 hover:text-yellow-700" @click="openEditModal(folder)" title="Edit">
+                                  <i class="fas fa-edit"></i>
                               </button>
                           </div>
                       </td>
@@ -180,7 +240,7 @@ function createFolder() {
                           </tbody>
                       </table>
                   </div>
-                  
+
                   <div class="flex justify-between items-center mt-4 text-sm text-gray-600">
                     <div>Showing <span id="showingStart">{{ props.folders.from }}</span> to <span id="showingEnd">{{ props.folders.to }}</span> of <span id="totalItems">{{ props.folders.total }}</span> folders</div>
                     <div class="flex justify-end space-x-2">
@@ -230,6 +290,33 @@ function createFolder() {
         </div>
       </div>
     </transition>
+
+    <!-- Edit Folder Modal -->
+    <transition name="modal">
+      <div v-if="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+          <h2 class="text-lg font-semibold mb-4">Papka nomini o‘zgartirish</h2>
+          <div class="mb-4">
+            <label for="editFolderName" class="block text-sm font-medium text-gray-700 mb-2">Yangi papka nomi</label>
+            <input
+              v-model="editFolderName"
+              type="text"
+              id="editFolderName"
+              class="border border-gray-300 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter new folder name"
+            />
+          </div>
+          <div class="flex justify-end space-x-2">
+            <button @click="closeEditModal" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+              Bekor qilish
+            </button>
+            <button @click="updateFolder" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+              Yangilash
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
     </AppLayout>
 </template>
 
@@ -240,12 +327,12 @@ function createFolder() {
             transform: translateY(-1px);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-        
+
         .sortable:hover {
             background-color: #e5e7eb;
             cursor: pointer;
         }
-        
+
         @media (max-width: 640px) {
             .responsive-table {
                 font-size: 0.8rem;

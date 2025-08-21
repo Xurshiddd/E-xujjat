@@ -33,4 +33,8 @@ class ArchiveRepository
         }
         return $archive ? true : false;
     }
+    // public function updateArchive(int $id, array $data): bool
+    // {
+
+    // }
 }

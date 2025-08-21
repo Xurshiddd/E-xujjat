@@ -27,4 +27,17 @@ class FolderRepository
     {
         return $this->folder->where('id', $id)->where('user_id', Auth::id())->with('archives')->first();
     }
+    public function deleteFolder($id)
+    {
+        $res = $this->folder->where('id', $id)->first();
+        return $res;
+    }
+    public function updateFolder($id, $data)
+    {
+        $folder = $this->folder->find($id);
+        if ($folder && $folder->user_id == Auth::id()) {
+            return $folder->update($data);
+        }
+        return false;
+    }
 }

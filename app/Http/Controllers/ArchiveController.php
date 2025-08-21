@@ -59,4 +59,20 @@ class ArchiveController extends Controller
             return response()->json(['error' => 'Failed to delete archive: ' . $e->getMessage()], 500);
         }
     }
+    public function edit($id)
+{
+    $archive = Archive::with('file')->find($id);
+    // dd($archive);
+    if (!$archive) {
+        return response()->json(['error' => 'Archive not found'], 404);
+    }
+
+    return Inertia::render('Archives/Edit', [
+        'archive' => $archive,
+        'categories' => Category::all(),
+        'folders' => auth()->user()->folders()->get(),
+    ]);
+}
+
+
 }

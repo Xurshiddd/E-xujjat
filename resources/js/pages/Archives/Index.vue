@@ -80,7 +80,7 @@ function confirmDelete(id: number) {
               </thead>
               <tbody>
                 <tr v-for="archive in props.archives" :key="archive.id" class="hover:bg-gray-50 transition-colors">
-                  <td class="px-6 py-4">{{ archive.name }}</td>
+                  <td class="px-6 py-4">{{ archive.name.substring(0, 50) }}</td>
                   <td class="px-6 py-4">{{ archive.code }}</td>
                   <td class="px-6 py-4">{{ archive.category?.name || '-' }}</td>
                   <td class="px-6 py-4">{{ archive.folder?.name || '-' }}</td>
@@ -97,6 +97,9 @@ function confirmDelete(id: number) {
                     >
                       <i class="fas fa-trash"></i>
                     </button>
+                    <a :href="route('archives.edit', archive.id)" class="text-yellow-500 hover:text-yellow-700 ml-3" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
                   </td>
                 </tr>
               </tbody>

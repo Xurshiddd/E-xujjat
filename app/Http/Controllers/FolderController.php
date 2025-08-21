@@ -35,4 +35,31 @@ class FolderController extends Controller
             "folder" => $this->service->getById($id),
         ]);
     }
+    public function update(Storerequest $request, $id)
+    {
+        $res = $this->service->update($id, $request->all());
+        if ($res !== false) {
+            return response()->json([
+                "data" => $res,
+                'message' => 'Folder updated successfully',
+            ]);
+        } else {
+            return response()->json([
+                'message' => 'Failed to update folder',
+            ], 500);
+        }
+    }
+    public function destroy($id)
+    {
+        $status = $this->service->delete($id);
+        if ($status == true) {
+        return response()->json([
+            "message"=> "Folder succes deleted",
+        ]);
+    } else {
+        return response()->json([
+            "message"=> "failed delete folder",
+        ]);
+    }
+}
 }
