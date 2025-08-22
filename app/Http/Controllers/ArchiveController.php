@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Archive\StoreRequest;
+use App\Http\Requests\Archive\UpdateRequest;
 use App\Models\Archive;
 use App\Models\Category;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Services\ArchiveService;
 
@@ -60,19 +60,30 @@ class ArchiveController extends Controller
         }
     }
     public function edit($id)
-{
-    $archive = Archive::with('file')->find($id);
-    // dd($archive);
-    if (!$archive) {
-        return response()->json(['error' => 'Archive not found'], 404);
+    {
+        $archive = Archive::with('file')->find($id);
+        // dd($archive);
+        if (!$archive) {
+            return response()->json(['error' => 'Archive not found'], 404);
+        }
+
+        return Inertia::render('Archives/Edit', [
+            'archive' => $archive,
+            'categories' => Category::all(),
+            'folders' => auth()->user()->folders()->get(),
+        ]);
     }
-
-    return Inertia::render('Archives/Edit', [
-        'archive' => $archive,
-        'categories' => Category::all(),
-        'folders' => auth()->user()->folders()->get(),
-    ]);
-}
-
-
+    public function update(UpdateRequest $request, $id)
+    {
+        try {
+            $result = $this->archiveService->updateArchive($id, $request);
+            if ($result) {
+                return response()->json(['success' => 'Archive updated successfully'], 200);
+            } else {
+                return response()->json(['error' => 'Archive not found'], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to update archive: ' . $e->getMessage()], 500);
+        }
+    }
 }

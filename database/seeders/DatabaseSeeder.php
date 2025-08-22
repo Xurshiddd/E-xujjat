@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        User::factory(10)->create();
         User::create([
             'name' => 'Admin User',
             'email' => 'admin@gmail.com',
@@ -20,5 +21,6 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('password'), // Ensure to hash the password
         ]);
         Category::factory(30)->create();
+        User::factory(10)->create();
     }
 }

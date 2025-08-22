@@ -46,4 +46,7 @@ class Archive extends Model
     {
         return $this->morphOne(Attachment::class, 'attachment');
     }
+    public function shares() {
+    return $this->morphMany(Share::class, 'shareable');
+}
 }

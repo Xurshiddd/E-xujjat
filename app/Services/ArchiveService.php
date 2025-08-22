@@ -43,5 +43,16 @@ class ArchiveService
     {
         return $this->archiveRepository->DeleteArchive($id);
     }
-
+    public function updateArchive($id, $data)
+    {
+        $archive['category_id'] = $data->category_id;
+        $archive['folder_id'] = $data->folder_id;
+        $archive['name'] = $data->name ?? $this->archiveRepository->getById($id)->name;
+        $res = $this->archiveRepository->updateArchive($id, $archive);
+        if ($data->hasFile('file')) {
+            $this->attachmentService->destroy($res->file);
+            event(new AttachmentEvent([$data->file], $res->file(), 'archives'));
+        }
+        return $res;
+    }
 }

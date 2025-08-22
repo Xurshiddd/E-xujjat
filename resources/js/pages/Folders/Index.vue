@@ -1,19 +1,26 @@
 <script setup lang="ts">
-import { type BreadcrumbItem, type User} from '@/types'
+import { type BreadcrumbItem, type User } from '@/types'
 import { Head, usePage } from '@inertiajs/vue3'
-import AppLayout from '@/layouts/AppLayout.vue';
+import AppLayout from '@/layouts/AppLayout.vue'
 import { ref } from 'vue'
 import axios from 'axios'
+import Multiselect from "@vueform/multiselect"
+import "@vueform/multiselect/themes/default.css"
 
+// Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Papkalar', href: '/folders' },
 ]
+
+// Helper: file size format
 function formatFileSize(bytes: number) {
-  if (bytes === 0) return '0 B';
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + sizes[i];
+  if (bytes === 0) return '0 B'
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + sizes[i]
 }
+
+// Types
 type Folder = {
   id: number
   name: string
@@ -37,32 +44,17 @@ interface FoldersResponse {
   to: number
   total: number
 }
-
-
 interface Props {
   folders: FoldersResponse
 }
-
 const props = defineProps<Props>()
 
+// Auth user
 const user = usePage().props.auth.user as User
 
-const showModal = ref(false)
-const newFolderName = ref('')
+// Flash messages
 const responseMessage = ref('')
 const errorMessage = ref('')
-
-const editModal = ref(false)
-const editFolderName = ref('')
-const editingFolderId = ref<number|null>(null)
-
-function openModal() {
-  showModal.value = true
-}
-function closeModal() {
-  showModal.value = false
-  newFolderName.value = ''
-}
 function showResponse(msg: string) {
   responseMessage.value = msg
   setTimeout(() => responseMessage.value = '', 5000)
@@ -72,280 +64,217 @@ function showError(msg: string) {
   setTimeout(() => errorMessage.value = '', 5000)
 }
 
+// 📂 Create folder
+const showModal = ref(false)
+const newFolderName = ref('')
+function openModal() { showModal.value = true }
+function closeModal() { showModal.value = false; newFolderName.value = '' }
+
 function createFolder() {
-  axios.post('/folders', {
-    name: newFolderName.value,
-  },{
-     maxContentLength: Infinity,
-  maxBodyLength: Infinity,
-  })
-  .then(response => {
-    // Folders ro‘yxatiga qo‘shish
-    props.folders.data.push(response.data.data)
-
-    // Inputni tozalash
-    newFolderName.value = ''
-
-    // Modalni yopish
-    closeModal()
-
-    // Xabar chiqarish
-    showResponse(response.data.message || 'Papka muvaffaqiyatli yaratildi!')
-  })
-  .catch(error => {
-    showError(error.response?.data?.message || 'Xatolik: papka yaratilmagan!')
-    console.error('Error creating folder:', error)
-  })
+  axios.post('/folders', { name: newFolderName.value })
+    .then(res => {
+      props.folders.data.push(res.data.data)
+      closeModal()
+      showResponse(res.data.message || 'Papka yaratildi!')
+    })
+    .catch(err => showError(err.response?.data?.message || 'Xatolik: papka yaratilmagan!'))
 }
 
-function deleteFolder(id: number){
-    axios.delete(`/folders/${id}`,{
-        headers: {
-      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-    }
-    }).then(response => {
-      window.location.reload()
-    // alert(response.data.message)
-    })
-    .catch(error => {
-      console.error("Papka o'chirishda xato:", error)
-      alert("Papka o'chirishda xato yuz berdi.")
-    })
+// 📂 Delete folder
+function deleteFolder(id: number) {
+  axios.delete(`/folders/${id}`, {
+    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') }
+  }).then(() => window.location.reload())
+    .catch(() => alert("Papka o'chirishda xato yuz berdi."))
 }
 function confirmDelete(id: number) {
-  if (confirm("Papkani o‘chirishga ishonchingiz komilmi?")) {
-    deleteFolder(id)
-  }
+  if (confirm("Papkani o‘chirishga ishonchingiz komilmi?")) deleteFolder(id)
 }
 
+// 📂 Edit folder
+const editModal = ref(false)
+const editFolderName = ref('')
+const editingFolderId = ref<number | null>(null)
 function openEditModal(folder: Folder) {
   editFolderName.value = folder.name
   editingFolderId.value = folder.id
   editModal.value = true
 }
-function closeEditModal() {
-  editModal.value = false
-  editFolderName.value = ''
-  editingFolderId.value = null
-}
+function closeEditModal() { editModal.value = false; editFolderName.value = ''; editingFolderId.value = null }
 function updateFolder() {
   if (!editingFolderId.value) return
-  axios.put(`/folders/${editingFolderId.value}`, {
-    name: editFolderName.value,
-  })
-  .then(response => {
-    const idx = props.folders.data.findIndex(f => f.id === editingFolderId.value)
-    if (idx !== -1) props.folders.data[idx].name = editFolderName.value
-
-    closeEditModal()
-    showResponse(response.data.message || 'Papka nomi o‘zgartirildi!')
-  })
-  .catch(error => {
-    showError(error.response?.data?.message || 'Xatolik: papka nomi o‘zgartirilmadi!')
-    console.error('Error updating folder:', error)
-  })
+  axios.put(`/folders/${editingFolderId.value}`, { name: editFolderName.value })
+    .then(res => {
+      const idx = props.folders.data.findIndex(f => f.id === editingFolderId.value)
+      if (idx !== -1) props.folders.data[idx].name = editFolderName.value
+      closeEditModal()
+      showResponse(res.data.message || 'Papka nomi o‘zgartirildi!')
+    })
+    .catch(err => showError(err.response?.data?.message || 'Xatolik: papka nomi o‘zgartirilmadi!'))
 }
+
+// 📂 Share folder
+const shareModal = ref(false)
+const sharingFolderId = ref<number | null>(null)
+const sharingFolderName = ref('')
+const expiresAt = ref('')
+const password = ref('')
+const generatedUrl = ref('')
+const users = ref<User[]>([])
+const selectedUsers = ref<number[]>([])
+
+function openShareModal(folder: Folder) {
+  sharingFolderId.value = folder.id
+  sharingFolderName.value = folder.name
+  shareModal.value = true
+  generatedUrl.value = ''
+  expiresAt.value = ''
+  password.value = ''
+  selectedUsers.value = []
+
+  axios.get('/users')
+    .then(res => { users.value = res.data.data })
+    .catch(() => showError("Userlarni olishda xato!"))
+}
+function closeShareModal() { shareModal.value = false }
+
+function generateUrl() {
+  if (!sharingFolderId.value) return
+  axios.post(`/shareble/${sharingFolderId.value}/share`, {
+    type: 'folder', expires_at: expiresAt.value || null, password: password.value || null,
+  }).then(res => {
+    generatedUrl.value = res.data.url
+    showResponse("Share link yaratildi!")
+  }).catch(() => showError("Share link yaratishda xato!"))
+}
+
+function sendToUsers() {
+  if (!sharingFolderId.value) return
+  axios.post(`/folders/${sharingFolderId.value}/share/send`, {
+    url: generatedUrl.value, users: selectedUsers.value,
+  }).then(res => {
+    showResponse(res.data.message || "Link yuborildi!")
+    closeShareModal()
+  }).catch(() => showError("Userlarga yuborishda xato!"))
+}
+
 </script>
 
 <template>
   <Head title="Folders" />
   <AppLayout :breadcrumbs="breadcrumbs">
-    <!-- Success message -->
-    <div v-if="responseMessage" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded shadow-lg z-50 transition">
+    <!-- Flash messages -->
+    <div v-if="responseMessage" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded shadow-lg">
       {{ responseMessage }}
     </div>
-    <!-- Error message -->
-    <div v-if="errorMessage" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded shadow-lg z-50 transition">
+    <div v-if="errorMessage" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded shadow-lg">
       {{ errorMessage }}
     </div>
 
-    <nav class="mb-4 flex space-x-2 text-sm text-gray-500">
-      <span v-for="(item, index) in breadcrumbs" :key="index">
-        <a :href="item.href" class="hover:underline">{{ item.title }}</a>
-        <span v-if="index < breadcrumbs.length - 1">/</span>
-      </span>
-    </nav>
-<div>
-  <button @click="openModal" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center transition-colors">
-                          <i class="fas fa-plus mr-2"></i> New Folder
-                      </button>
-                    </div>
-    <div v-if="props.folders.data.length > 0" class="space-y-4">
-      <div class="container mx-auto px-4 py-8 max-w-6xl">
-          <div class="bg-white rounded-xl shadow-md overflow-hidden">
-              <div class="p-6">
-                  <div class="flex justify-between items-center mb-6">
-                      <h1 class="text-2xl font-bold text-gray-800">Folder Manager</h1>
-                  </div>
-
-                  <div class="relative overflow-x-auto responsive-table">
-                      <table class="w-full text-sm text-left text-gray-500">
-                          <thead class="text-xs text-gray-700 uppercase bg-gray-100">
-                              <tr>
-                                  <th scope="col" class="px-6 py-3 sortable" onclick="sortTable(0)">
-                                      <div class="flex items-center">
-                                          Name
-                                          <i class="fas fa-sort ml-2 text-gray-400"></i>
-                                      </div>
-                                  </th>
-                                  <th scope="col" class="px-6 py-3 sortable" onclick="sortTable(1)">
-                                      <div class="flex items-center">
-                                          Date Modified
-                                          <i class="fas fa-sort ml-2 text-gray-400"></i>
-                                      </div>
-                                  </th>
-                                  <th scope="col" class="px-6 py-3 sortable" onclick="sortTable(2)">
-                                      <div class="flex items-center">
-                                          Type
-                                          <i class="fas fa-sort ml-2 text-gray-400"></i>
-                                      </div>
-                                  </th>
-                                  <th scope="col" class="px-6 py-3 sortable" onclick="sortTable(3)">
-                                      <div class="flex items-center">
-                                          Size
-                                          <i class="fas fa-sort ml-2 text-gray-400"></i>
-                                      </div>
-                                  </th>
-                                  <th scope="col" class="px-6 py-3">
-                                      Actions
-                                  </th>
-                              </tr>
-                          </thead>
-                          <tbody id="folderTable">
-                              <tr v-for="folder in props.folders.data" :key="folder.id" class="folder-row hover:bg-gray-50 transition-colors">
-                                  <td class="px-6 py-4 flex items-center">
-                                      <i class="fas fa-folder folder-icon mr-2 text-yellow-500"></i>
-                                      {{ folder.name }}
-                                  </td>
-                                  <td class="px-6 py-4">{{ new Date(folder.created_at).toLocaleDateString() }}</td>
-                                  <td class="px-6 py-4">Folder</td>
-                                  <td class="px-6 py-4">{{ formatFileSize(folder.size) }}</td>
-                                  <td class="px-6 py-4">
-                          <div class="flex space-x-2">
-                              <button class="text-blue-500 hover:text-blue-700" title="Open">
-                                  <a :href="route('folders.show', folder.id)"><i class="fas fa-folder-open"></i></a>
-                              </button>
-                              <button class="text-green-500 hover:text-green-700" title="Share">
-                                  <i class="fas fa-share-alt"></i>
-                              </button>
-                              <button class="text-red-500 hover:text-red-700" @click="confirmDelete(folder.id)" title="Delete">
-                                  <i class="fas fa-trash-alt"></i>
-                              </button>
-                              <button class="text-yellow-500 hover:text-yellow-700" @click="openEditModal(folder)" title="Edit">
-                                  <i class="fas fa-edit"></i>
-                              </button>
-                          </div>
-                      </td>
-                              </tr>
-                          </tbody>
-                      </table>
-                  </div>
-
-                  <div class="flex justify-between items-center mt-4 text-sm text-gray-600">
-                    <div>Showing <span id="showingStart">{{ props.folders.from }}</span> to <span id="showingEnd">{{ props.folders.to }}</span> of <span id="totalItems">{{ props.folders.total }}</span> folders</div>
-                    <div class="flex justify-end space-x-2">
-                    <div class="flex space-x-2" v-for="value in props.folders.links" :key="value.label">
-                      <a
-                        :href="value.url || '#'"
-                        :class="[
-                          'px-3 py-1 border rounded-md',
-                          value.active ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 hover:bg-gray-100',
-                          !value.url ? 'pointer-events-none opacity-50' : ''
-                        ]"
-                        v-html="value.label"
-                      ></a>
-                    </div>
-                    </div>
-                  </div>
-              </div>
-          </div>
-      </div>
+    <!-- Create new folder button -->
+    <div class="mb-4">
+      <button @click="openModal" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center">
+        <i class="fas fa-plus mr-2"></i> New Folder
+      </button>
     </div>
 
+    <!-- Folder Table -->
+    <div v-if="props.folders.data.length" class="bg-white rounded-xl shadow-md p-6">
+      <table class="w-full text-sm text-left text-gray-500">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+          <tr>
+            <th class="px-6 py-3">Name</th>
+            <th class="px-6 py-3">Date Modified</th>
+            <th class="px-6 py-3">Type</th>
+            <th class="px-6 py-3">Size</th>
+            <th class="px-6 py-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="folder in props.folders.data" :key="folder.id" class="hover:bg-gray-50">
+            <td class="px-6 py-4 flex items-center">
+              <i class="fas fa-folder text-yellow-500 mr-2"></i>{{ folder.name }}
+            </td>
+            <td class="px-6 py-4">{{ new Date(folder.created_at).toLocaleDateString() }}</td>
+            <td class="px-6 py-4">Folder</td>
+            <td class="px-6 py-4">{{ formatFileSize(folder.size) }}</td>
+            <td class="px-6 py-4 flex space-x-2">
+              <a :href="route('folders.show', folder.id)" class="text-blue-500 hover:text-blue-700"><i class="fas fa-folder-open"></i></a>
+              <button @click="openShareModal(folder)" class="text-green-500 hover:text-green-700"><i class="fas fa-share-alt"></i></button>
+              <button @click="confirmDelete(folder.id)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash-alt"></i></button>
+              <button @click="openEditModal(folder)" class="text-yellow-500 hover:text-yellow-700"><i class="fas fa-edit"></i></button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <p v-else class="text-gray-500">No folders found.</p>
 
-    <!-- New Folder Modal -->
+    <!-- Create Modal -->
     <transition name="modal">
-      <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
         <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
           <h2 class="text-lg font-semibold mb-4">Yangi papka yaratish</h2>
-          <div class="mb-4">
-            <label for="folderName" class="block text-sm font-medium text-gray-700 mb-2">Papka nomi</label>
-            <input
-              v-model="newFolderName"
-              type="text"
-              id="folderName"
-              class="border border-gray-300 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter folder name"
-            />
-          </div>
+          <input v-model="newFolderName" type="text" placeholder="Enter folder name" class="border rounded px-3 py-2 w-full mb-4" />
           <div class="flex justify-end space-x-2">
-            <button @click="closeModal" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
-              Bekor qilish
-            </button>
-            <button @click="createFolder" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-              Saqlash
-            </button>
+            <button @click="closeModal" class="px-4 py-2 bg-gray-200 rounded">Bekor qilish</button>
+            <button @click="createFolder" class="px-4 py-2 bg-blue-500 text-white rounded">Saqlash</button>
           </div>
         </div>
       </div>
     </transition>
 
-    <!-- Edit Folder Modal -->
+    <!-- Edit Modal -->
     <transition name="modal">
-      <div v-if="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div v-if="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
         <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
           <h2 class="text-lg font-semibold mb-4">Papka nomini o‘zgartirish</h2>
-          <div class="mb-4">
-            <label for="editFolderName" class="block text-sm font-medium text-gray-700 mb-2">Yangi papka nomi</label>
-            <input
-              v-model="editFolderName"
-              type="text"
-              id="editFolderName"
-              class="border border-gray-300 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter new folder name"
-            />
-          </div>
+          <input v-model="editFolderName" type="text" placeholder="Enter new folder name" class="border rounded px-3 py-2 w-full mb-4" />
           <div class="flex justify-end space-x-2">
-            <button @click="closeEditModal" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
-              Bekor qilish
-            </button>
-            <button @click="updateFolder" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-              Yangilash
-            </button>
+            <button @click="closeEditModal" class="px-4 py-2 bg-gray-200 rounded">Bekor qilish</button>
+            <button @click="updateFolder" class="px-4 py-2 bg-blue-500 text-white rounded">Yangilash</button>
           </div>
         </div>
       </div>
     </transition>
-    </AppLayout>
+
+    <!-- Share Modal -->
+    <transition name="modal">
+      <div v-if="shareModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+          <h2 class="text-lg font-semibold mb-4">Papkani ulashish</h2>
+          <p class="mb-4"><strong>Papka nomi:</strong> {{ sharingFolderName }}</p>
+
+          <input type="datetime-local" v-model="expiresAt" class="border rounded px-3 py-2 w-full mb-3" />
+          <input type="text" v-model="password" placeholder="Parol (ixtiyoriy)" class="border rounded px-3 py-2 w-full mb-3" />
+
+          <div class="flex space-x-2 mb-3">
+            <button @click="generateUrl" class="px-4 py-2 bg-blue-500 text-white rounded">Generate URL</button>
+            <input v-if="generatedUrl" v-model="generatedUrl" readonly class="border px-3 py-2 rounded w-full" />
+          </div>
+
+          <div v-if="generatedUrl" class="mb-3">
+            <label class="block text-sm mb-1">Select Users</label>
+            <Multiselect
+              v-model="selectedUsers"
+              :options="users"
+              :multiple="true"
+              :close-on-select="false"
+              :preserve-search="true"
+              :clear-on-select="false"
+              label="name"
+              track-by="id"
+              mode="tags"
+              placeholder="Foydalanuvchilarni tanlang"
+            />
+          </div>
+
+          <div class="flex justify-end space-x-2">
+            <button @click="closeShareModal" class="px-4 py-2 bg-gray-200 rounded">Bekor qilish</button>
+            <button v-if="generatedUrl" @click="sendToUsers" class="px-4 py-2 bg-green-500 text-white rounded">Jo‘natish</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+  </AppLayout>
 </template>
-
-<style scoped>
-
- .folder-row:hover {
-            background-color: #f3f4f6;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .sortable:hover {
-            background-color: #e5e7eb;
-            cursor: pointer;
-        }
-
-        @media (max-width: 640px) {
-            .responsive-table {
-                font-size: 0.8rem;
-            }
-            .folder-icon {
-                font-size: 1rem;
-            }
-        }
-
-.modal-enter-active, .modal-leave-active {
-  transition: opacity 0.3s;
-}
-.modal-enter, .modal-leave-to /* .modal-leave-active in <2.1.8 */ {
-  opacity: 0;
-}
-</style>

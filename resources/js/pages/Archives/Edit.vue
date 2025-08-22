@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3'
+import { Head } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { ref } from 'vue'
-
+import axios from "axios"
+import { set } from '@vueuse/core';
 const props = defineProps<{
   archive: {
     id: number,
@@ -70,35 +71,43 @@ async function submitEdit() {
     alert('Please select a category')
     return
   }
-  if (!archiveName.value.trim()) {
-    alert('Archive name required')
-    return
-  }
 
   const formData = new FormData()
   formData.append('folder_id', selectedFolder.value.id.toString())
   formData.append('category_id', selectedCategory.value.toString())
   formData.append('name', archiveName.value)
-
+  formData.append('_method', 'PUT')
   if (selectedFiles.value.length > 0) {
-    formData.append('file', selectedFiles.value[0]) // faqat bitta fayl
+    formData.append('file', selectedFiles.value[0])
   }
 
-  try {
-    await router.post(`/archives/${props.archive.id}`, formData, {
-      forceFormData: true,
-      onSuccess: () => {
-        showResponse('Archive updated successfully!', false)
-      },
-      onError: (errors) => {
-        console.error('Validation errors:', errors)
-        showResponse('Failed to update archive. Check inputs.', true)
+try {
+  const response = await axios.post(
+    `/archives/${props.archive.id}`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data"
       }
-    })
-  } catch (error) {
+    }
+  )
+
+  showResponse('Archive updated successfully!', false)
+    setTimeout(() => {
+      window.location.reload()
+    }, 3000);
+
+
+} catch (error: any) {
+  if (error.response && error.response.status === 422) {
+    console.error('Validation errors:', error.response.data.errors)
+    showResponse('Failed to update archive. Check inputs.', true)
+  } else {
     console.error('Unexpected error:', error)
     showResponse('Unexpected error occurred.', true)
   }
+}
+
 }
 </script>
 
@@ -170,7 +179,7 @@ async function submitEdit() {
     <div class="flex items-center">
       <i class="fas fa-file text-indigo-500 mr-3"></i>
       <div>
-        <div class="font-medium text-gray-800">{{ props.archive.file.name }}</div>
+        <div class="font-medium text-gray-800">{{ props.archive.name }}</div>
         <div class="text-xs text-gray-500">{{ formatFileSize(props.archive.file.size) }}</div>
       </div>
     </div>

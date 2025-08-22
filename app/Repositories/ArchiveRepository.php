@@ -33,8 +33,16 @@ class ArchiveRepository
         }
         return $archive ? true : false;
     }
-    // public function updateArchive(int $id, array $data): bool
-    // {
-
-    // }
+    public function getById(int $id): ?Archive
+    {
+        return $this->archive->find($id);
+    }
+    public function updateArchive(int $id, array $data)
+    {
+        $archive = $this->archive->find($id);
+        if ($archive) {
+            $archive->update($data);
+        }
+        return $archive;
+    }
 }

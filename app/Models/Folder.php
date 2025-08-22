@@ -31,4 +31,7 @@ class Folder extends Model
     {
         return $this->hasMany(Archive::class);
     }
+    public function shares() {
+    return $this->morphMany(Share::class, 'shareable');
+}
 }
