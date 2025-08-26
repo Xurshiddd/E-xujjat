@@ -6,6 +6,7 @@ use App\Models\Send;
 use App\Models\Share;
 use App\Services\ShareService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ShareController extends Controller
 {
@@ -15,7 +16,10 @@ class ShareController extends Controller
      */
     public function index()
     {
-        //
+        // dd($this->shareService->getAllShares());
+        return Inertia::render('Shares/Send', [
+            'shares' => $this->shareService->getAllShares()
+        ]);
     }
 
     /**
@@ -71,7 +75,7 @@ class ShareController extends Controller
             Send::create([
                 'url' => $request->url,
                 'user_id' => auth()->id(),
-                'folder_id' => $id,
+                'type_id' => $id,
                 'users' => implode(',', $request->users)
             ]);
         } catch (\Throwable $th) {

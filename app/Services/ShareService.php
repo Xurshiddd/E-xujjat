@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Models\Archive;
 use App\Models\Share;
 use App\Models\Folder;
+use App\Models\User;
 use Log;
+use PhpParser\NodeVisitor\FirstFindingVisitor;
 
 class ShareService
 {
@@ -24,7 +26,7 @@ class ShareService
             "password" => "nullable|string|min:6",
         ])->validate();
         $token = \Str::random(32);
-         $this->share->create([
+        $this->share->create([
             'shareable_type' => $data['type'] == 'folder' ? Folder::class : Archive::class,
             'user_id' => auth()->id(),
             'shareable_id' => $id,
@@ -33,8 +35,27 @@ class ShareService
             'token' => $token,
         ]);
         return [
-            'url' => url('/s/shared' . $token),
+            'url' => url('/s/shared/' . $token),
             'token' => $token,
         ];
     }
+    public function getAllShares()
+    {
+        $user = User::with('sends')->find(auth()->id());
+
+        $shares = $user->sends->map(function ($send) {
+            $share = $send->shareable; // Polymorphic related model
+            return [
+                'type' => class_basename($share->getMorphClass()),  // "Folder" or "Archive"
+                'url' => $send->url,
+                'users' => implode(', ', User::whereIn('id', explode(',', $send->users))->pluck('name')->toArray()),
+                'expires_at' => $share->expires_at,
+                'password' => $share->password ? 'Yes' : 'No',
+            ];
+        });
+
+
+        return $shares;
+    }
+
 }

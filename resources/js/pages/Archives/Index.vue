@@ -3,6 +3,8 @@ import { Head } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 import axios from 'axios'
 import { ref } from 'vue'
+import Multiselect from "@vueform/multiselect"
+import "@vueform/multiselect/themes/default.css"
 
 type File = {
   id: number
@@ -22,7 +24,7 @@ interface Archive {
   folder?: any
   user?: any
   category?: any
-  file: File | null // Agar backendda faqat bitta fayl bo'lsa, shunday qilib yozamiz
+  file: File | null
 }
 
 interface Props {
@@ -31,25 +33,73 @@ interface Props {
 const props = defineProps<Props>()
 const archives = ref(props.archives)
 
+// 📂 Delete
 function deleteArchive(id: number) {
   axios.delete(`/archives/${id}`, {
     headers: {
       'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
     }
   })
-    .then(() => {
-      // page reload
-      window.location.reload()
-    })
+    .then(() => window.location.reload())
     .catch(error => {
       console.error("Arxiv o'chirishda xato:", error)
       alert("Arxiv o'chirishda xato yuz berdi.")
     })
 }
 function confirmDelete(id: number) {
-  if (confirm("Arxivni o‘chirishga ishonchingiz komilmi?")) {
-    deleteArchive(id)
-  }
+  if (confirm("Arxivni o‘chirishga ishonchingiz komilmi?")) deleteArchive(id)
+}
+
+// 📂 Share
+const shareModal = ref(false)
+const sharingArchiveId = ref<number | null>(null)
+const sharingArchiveName = ref('')
+const expiresAt = ref('')
+const password = ref('')
+const generatedUrl = ref('')
+const users = ref<{ id: number, name: string }[]>([])
+const selectedUsers = ref<number[]>([])
+
+function openShareModal(archive: Archive) {
+  sharingArchiveId.value = archive.id
+  sharingArchiveName.value = archive.name
+  shareModal.value = true
+  generatedUrl.value = ''
+  expiresAt.value = ''
+  password.value = ''
+  selectedUsers.value = []
+
+  axios.get('/users')
+    .then(res => {
+      users.value = res.data.data
+    })
+    .catch(() => alert("Userlarni olishda xato!"))
+}
+function closeShareModal() {
+  shareModal.value = false
+}
+
+function generateUrl() {
+  if (!sharingArchiveId.value) return
+  axios.post(`/shareble/${sharingArchiveId.value}/share`, {
+    type: 'archive',
+    expires_at: expiresAt.value || null,
+    password: password.value || null,
+  }).then(res => {
+    generatedUrl.value = res.data.url
+    alert("Share link yaratildi!")
+  }).catch(() => alert("Share link yaratishda xato!"))
+}
+
+function sendToUsers() {
+  if (!sharingArchiveId.value) return
+  axios.post(`/shareble/${sharingArchiveId.value}/share/send`, {
+    url: generatedUrl.value,
+    users: selectedUsers.value,
+  }).then(res => {
+    alert(res.data.message || "Link yuborildi!")
+    closeShareModal()
+  }).catch(() => alert("Userlarga yuborishda xato!"))
 }
 </script>
 
@@ -86,20 +136,19 @@ function confirmDelete(id: number) {
                   <td class="px-6 py-4">{{ archive.folder?.name || '-' }}</td>
                   <td class="px-6 py-4">{{ archive.user?.name || '-' }}</td>
                   <td class="px-6 py-4">{{ new Date(archive.created_at).toLocaleDateString() }}</td>
-                  <td class="px-6 py-4">
-                    <a :href="`/storage/${archive.file?.path}`" v-if="archive.file" class="text-blue-500 hover:text-blue-700 mr-2" title="Ko‘rish" target="_blank">
+                  <td class="px-6 py-4 flex space-x-2">
+                    <a :href="`/storage/${archive.file?.path}`" v-if="archive.file" class="text-blue-500 hover:text-blue-700" title="Ko‘rish" target="_blank">
                       <i class="fas fa-eye"></i>
                     </a>
-                    <button
-                      class="text-red-500 hover:text-red-700"
-                      @click="confirmDelete(archive.id)"
-                      title="O‘chirish"
-                    >
+                    <button class="text-green-500 hover:text-green-700" @click="openShareModal(archive)" title="Ulashish">
+                      <i class="fas fa-share-alt"></i>
+                    </button>
+                    <a :href="route('archives.edit', archive.id)" class="text-yellow-500 hover:text-yellow-700" title="Edit">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <button class="text-red-500 hover:text-red-700" @click="confirmDelete(archive.id)" title="O‘chirish">
                       <i class="fas fa-trash"></i>
                     </button>
-                    <a :href="route('archives.edit', archive.id)" class="text-yellow-500 hover:text-yellow-700 ml-3" title="Edit">
-                        <i class="fas fa-edit"></i>
-                    </a>
                   </td>
                 </tr>
               </tbody>
@@ -111,8 +160,41 @@ function confirmDelete(id: number) {
         </div>
       </div>
     </div>
+
+    <!-- Share Modal -->
+    <transition name="modal">
+      <div v-if="shareModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+          <h2 class="text-lg font-semibold mb-4">Arxivni ulash</h2>
+          <p class="mb-4"><strong>Arxiv nomi:</strong> {{ sharingArchiveName }}</p>
+
+          <input type="datetime-local" v-model="expiresAt" class="border rounded px-3 py-2 w-full mb-3" />
+          <input type="text" v-model="password" placeholder="Parol (ixtiyoriy)" class="border rounded px-3 py-2 w-full mb-3" />
+
+          <div class="flex space-x-2 mb-3">
+            <button @click="generateUrl" class="px-4 py-2 bg-blue-500 text-white rounded">Generate URL</button>
+            <input v-if="generatedUrl" v-model="generatedUrl" readonly class="border px-3 py-2 rounded w-full" />
+          </div>
+
+          <div v-if="generatedUrl" class="mb-3">
+            <label class="block text-sm mb-1">Select Users</label>
+            <Multiselect
+              v-model="selectedUsers"
+              :options="users"
+              mode="tags"
+              label="name"
+              track-by="id"
+              value-prop="id"
+              placeholder="Foydalanuvchilarni tanlang"
+            />
+          </div>
+
+          <div class="flex justify-end space-x-2">
+            <button @click="closeShareModal" class="px-4 py-2 bg-gray-200 rounded">Bekor qilish</button>
+            <button v-if="generatedUrl" @click="sendToUsers" class="px-4 py-2 bg-green-500 text-white rounded">Jo‘natish</button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </AppLayout>
 </template>
-
-<style scoped>
-</style>

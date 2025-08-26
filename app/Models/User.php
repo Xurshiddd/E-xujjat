@@ -53,10 +53,18 @@ class User extends Authenticatable
     }
     public function folders()
     {
-        return $this->hasMany(Folder::class);
+        return $this->hasMany(Folder::class, 'user_id');
     }
     public function shares()
     {
-        return $this->hasMany(Share::class);
+        return $this->hasMany(Share::class, 'user_id');
+    }
+    public function archives()
+    {
+        return $this->hasMany(Archive::class, 'user_id');
+    }
+    public function sends()
+    {
+        return $this->hasMany(Send::class, 'user_id');
     }
 }
