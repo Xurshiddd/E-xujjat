@@ -28,6 +28,7 @@ Route::middleware('auth')->group(function () {
         ]);
     });
     Route::post('/shareble/{id}/share', [ShareController::class, 'store'])->name('folders.share');
+    Route::post('/shareble/{id}/share/send', [ShareController::class,'send'])->name('folders.share.send');
 });
 
 require __DIR__.'/settings.php';

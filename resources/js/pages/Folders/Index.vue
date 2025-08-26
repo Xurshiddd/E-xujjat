@@ -120,7 +120,7 @@ const sharingFolderName = ref('')
 const expiresAt = ref('')
 const password = ref('')
 const generatedUrl = ref('')
-const users = ref<User[]>([])
+const users = ref<{ id: number, name: string }[]>([])
 const selectedUsers = ref<number[]>([])
 
 function openShareModal(folder: Folder) {
@@ -133,8 +133,11 @@ function openShareModal(folder: Folder) {
   selectedUsers.value = []
 
   axios.get('/users')
-    .then(res => { users.value = res.data.data })
+    .then(res => {
+      users.value = res.data.data // <-- API {id, name} qaytarishi kerak
+    })
     .catch(() => showError("Userlarni olishda xato!"))
+
 }
 function closeShareModal() { shareModal.value = false }
 
@@ -150,7 +153,7 @@ function generateUrl() {
 
 function sendToUsers() {
   if (!sharingFolderId.value) return
-  axios.post(`/folders/${sharingFolderId.value}/share/send`, {
+  axios.post(`/shareble/${sharingFolderId.value}/share/send`, {
     url: generatedUrl.value, users: selectedUsers.value,
   }).then(res => {
     showResponse(res.data.message || "Link yuborildi!")
@@ -242,7 +245,7 @@ function sendToUsers() {
     <transition name="modal">
       <div v-if="shareModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
         <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
-          <h2 class="text-lg font-semibold mb-4">Papkani ulashish</h2>
+          <h2 class="text-lg font-semibold mb-4">Papkani ulash</h2>
           <p class="mb-4"><strong>Papka nomi:</strong> {{ sharingFolderName }}</p>
 
           <input type="datetime-local" v-model="expiresAt" class="border rounded px-3 py-2 w-full mb-3" />
@@ -256,17 +259,17 @@ function sendToUsers() {
           <div v-if="generatedUrl" class="mb-3">
             <label class="block text-sm mb-1">Select Users</label>
             <Multiselect
-              v-model="selectedUsers"
-              :options="users"
-              :multiple="true"
-              :close-on-select="false"
-              :preserve-search="true"
-              :clear-on-select="false"
-              label="name"
-              track-by="id"
-              mode="tags"
-              placeholder="Foydalanuvchilarni tanlang"
-            />
+  v-model="selectedUsers"
+  :options="users"
+  mode="tags"
+  label="name"
+  track-by="id"
+  value-prop="id"
+  placeholder="Foydalanuvchilarni tanlang"
+/>
+
+
+
           </div>
 
           <div class="flex justify-end space-x-2">

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Send;
 use App\Models\Share;
 use App\Services\ShareService;
 use Illuminate\Http\Request;
@@ -63,5 +64,19 @@ class ShareController extends Controller
     public function destroy(Share $share)
     {
         //
+    }
+    public function send(Request $request, $id)
+    {
+        try {
+            Send::create([
+                'url' => $request->url,
+                'user_id' => auth()->id(),
+                'folder_id' => $id,
+                'users' => implode(',', $request->users)
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => 'Xatolik yuz berdi'], 500);
+        }
+        return response()->json(['success'=> true],200);
     }
 }
