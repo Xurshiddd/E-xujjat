@@ -94,8 +94,11 @@ function generateUrl() {
 function sendToUsers() {
   if (!sharingArchiveId.value) return
   axios.post(`/shareble/${sharingArchiveId.value}/share/send`, {
+    expires_at: expiresAt.value,
+    type: 'archive',
     url: generatedUrl.value,
     users: selectedUsers.value,
+    password: password.value
   }).then(res => {
     alert(res.data.message || "Link yuborildi!")
     closeShareModal()

@@ -11,8 +11,9 @@ class Share extends Model
         'shareable_id',
         'shareable_type',
         'token',
+        'url',
         'expires_at',
-        'password',
+        'password'
     ];
 
     public function shareable()

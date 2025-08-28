@@ -154,7 +154,11 @@ function generateUrl() {
 function sendToUsers() {
   if (!sharingFolderId.value) return
   axios.post(`/shareble/${sharingFolderId.value}/share/send`, {
-    url: generatedUrl.value, users: selectedUsers.value,
+    password: password.value,
+    expires_at: expiresAt.value,
+    type: 'folder',
+    url: generatedUrl.value,
+    users: selectedUsers.value,
   }).then(res => {
     showResponse(res.data.message || "Link yuborildi!")
     closeShareModal()

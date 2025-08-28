@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('token')->unique();
             $table->timestamp('expires_at')->nullable();
             $table->string('password')->nullable();
+            $table->string('url')->unique();
             $table->timestamps();
         });
     }

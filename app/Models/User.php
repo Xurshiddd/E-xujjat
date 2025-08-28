@@ -63,8 +63,4 @@ class User extends Authenticatable
     {
         return $this->hasMany(Archive::class, 'user_id');
     }
-    public function sends()
-    {
-        return $this->hasMany(Send::class, 'user_id');
-    }
 }

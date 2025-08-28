@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Admin User',
             'email' => 'admin@gmail.com',
             'is_admin' => true,
-            'password' => bcrypt('password'), // Ensure to hash the password
+            'password' => bcrypt('password'),
         ]);
         Category::factory(30)->create();
         User::factory(10)->create();
