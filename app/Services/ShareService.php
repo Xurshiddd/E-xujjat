@@ -5,12 +5,12 @@ namespace App\Services;
 use App\Models\Archive;
 use App\Models\Share;
 use App\Models\Folder;
-use App\Models\User;
 use DB;
 use Hash;
+use Illuminate\Http\Request;
 use Log;
-use PhpParser\NodeVisitor\FirstFindingVisitor;
-
+use ZipArchive;
+use Carbon\Carbon;
 class ShareService
 {
     /**
@@ -76,15 +76,49 @@ class ShareService
 
         // shareable_type orqali nomini olish (Folder yoki Archive jadvalidan)
         $shares->transform(function ($item) {
-            if ($item->shareable_type === \App\Models\Folder::class) {
+            if ($item->shareable_type === Folder::class) {
                 $item->shareable_name = DB::table('folders')->where('id', $item->shareable_id)->value('name');
             } else {
-                $item->shareable_name = DB::table('archives')->where('id', $item->shareable_id)->value('title');
+                $item->shareable_name = DB::table('archives')->where('id', $item->shareable_id)->value('name');
             }
             $item->receivers = explode(',', $item->receivers);
             return $item;
         });
 
+        return $shares;
+    }
+    public function getResived()
+    {
+        $shares = DB::table('shareable as sh')
+            ->select(
+                's.id',
+                's.url',
+                's.expires_at',
+                's.shareable_type',
+                's.shareable_id',
+                's.password',
+                's.token',
+                'u.name as sender_name'
+            )
+            ->join('shares as s', 'sh.share_id', '=', 's.id')
+            ->join('users as u', 's.user_id', '=', 'u.id')
+            ->where('sh.resiver_id', 2)
+            ->orderByDesc('s.id')
+            ->get();
+
+        // Type va name ni qo‘shish
+        $shares->transform(function ($item) {
+            if ($item->shareable_type === Folder::class) {
+                $item->shareable_name = DB::table('folders')->where('id', $item->shareable_id)->value('name');
+                $item->type = 'Folder';
+            } else {
+                $item->shareable_name = DB::table('archives')->where('id', $item->shareable_id)->value('name');
+                $item->type = 'Archive';
+            }
+            $item->has_password = $item->password ? true : false;
+            unset($item->password);
+            return $item;
+        });
         return $shares;
     }
     public function generateUrl(array $data): string
@@ -142,5 +176,59 @@ class ShareService
             return null;
         $segment = basename($path);
         return $segment ?: null;
+    }
+    public function downloadArchive($token, Request $request)
+    {
+        $share = Share::where('token', $token)->first();
+
+        if ($share && Hash::check($request->password, $share->password)) {
+            if ($share->expires_at && Carbon::parse($share->expires_at)->isPast()) {
+                return response()->json(['message' => 'Link expired'], 410);
+            }
+            // Agar folder bo'lsa
+            if ($share->shareable_type === Folder::class) {
+                $folder = Folder::findOrFail($share->shareable_id);
+                $archives = $folder->archives;
+
+                if ($archives->isEmpty()) {
+                    return response()->json(['error' => 'Folder bo‘sh'], 404);
+                }
+
+                // vaqtinchalik zip nomi
+                $zipFileName = 'folder_' . $folder->id . '_' . time() . '.zip';
+                $zipPath = storage_path("app/public/{$zipFileName}");
+
+                $zip = new ZipArchive;
+                if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE) {
+                    foreach ($archives as $archive) {
+                        if ($archive->file) {
+                            $filePath = storage_path('app/public/' . $archive->file->path);
+                            if (file_exists($filePath)) {
+                                // zip ichida fayl nomi archive name bo‘lsin
+                                $zip->addFile($filePath, $archive->name . '.' . pathinfo($filePath, PATHINFO_EXTENSION));
+                            }
+                        }
+                    }
+                    $zip->close();
+                } else {
+                    return response()->json(['error' => 'Zip yaratib bo‘lmadi'], 500);
+                }
+
+                // Zip faylni yuklab berish va keyin o‘chirish
+                return response()->download($zipPath)->deleteFileAfterSend(true);
+            }
+
+            // Agar archive bo‘lsa
+            if ($share->shareable_type === Archive::class) {
+                $archive = Archive::findOrFail($share->shareable_id);
+                if ($archive->file) {
+                    $filePath = storage_path('app/public/' . $archive->file->path);
+                    return response()->download($filePath, $archive->name . '.' . pathinfo($filePath, PATHINFO_EXTENSION));
+                }
+                return response()->json(['error' => 'Fayl topilmadi'], 404);
+            }
+        }
+
+        return response()->json(['error' => 'Token yoki parol noto‘g‘ri'], 403);
     }
 }

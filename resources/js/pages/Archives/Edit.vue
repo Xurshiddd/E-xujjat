@@ -120,34 +120,46 @@ try {
       v-if="responseMessage"
       :class="[
         'fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded shadow-lg z-50 transition',
-        isErrorMessage ? 'bg-red-500 text-white' : 'bg-green-500 text-white'
+        isErrorMessage
+          ? 'bg-red-500 text-white dark:bg-red-600'
+          : 'bg-green-500 text-white dark:bg-green-600'
       ]"
     >
       {{ responseMessage }}
     </div>
 
     <div class="container mx-auto px-4 py-8 max-w-4xl">
-      <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">Edit Archive</h1>
-        <p class="text-gray-600 mb-6">Change archive info, folder, category or files</p>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden p-6">
+        <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">Edit Archive</h1>
+        <p class="text-gray-600 dark:text-gray-300 mb-6">
+          Change archive info, folder, category or files
+        </p>
 
         <!-- Archive Name -->
         <div class="mb-6">
-          <label class="block text-gray-700 mb-2">Archive Name</label>
-          <input v-model="archiveName" type="text"
-            class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <label class="block text-gray-700 dark:text-gray-300 mb-2">Archive Name</label>
+          <input
+            v-model="archiveName"
+            type="text"
+            class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500
+                   bg-white dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
+          />
         </div>
 
         <!-- Folder Selection -->
         <div class="mb-8">
-          <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+          <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center">
             <i class="fas fa-folder-open mr-2 text-indigo-500"></i> Select Folder
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            <div v-for="folder in folders" :key="folder.id"
-              class="folder-item cursor-pointer p-3 border rounded-lg flex items-center"
-              :class="{ 'border-indigo-500 bg-indigo-50': selectedFolder?.id === folder.id }"
-              @click="selectFolder(folder)">
+            <div
+              v-for="folder in folders"
+              :key="folder.id"
+              class="folder-item cursor-pointer p-3 border rounded-lg flex items-center
+                     bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+              :class="{ 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/40': selectedFolder?.id === folder.id }"
+              @click="selectFolder(folder)"
+            >
               <i class="fas fa-folder mr-3 text-xl text-yellow-500"></i>
               <span>{{ folder.name }}</span>
             </div>
@@ -156,76 +168,101 @@ try {
 
         <!-- Category Selection -->
         <div class="mb-8">
-          <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+          <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center">
             <i class="fas fa-tags mr-2 text-indigo-500"></i> Select Category
           </h2>
           <div class="flex flex-wrap gap-3">
-            <div v-for="category in categories" :key="category.id"
-              class="category-pill cursor-pointer px-4 py-2 bg-gray-100 rounded-full flex items-center"
-              :class="{ 'bg-indigo-100 border border-indigo-300': selectedCategory === category.id }"
-              @click="selectCategory(category)">
-              <i class="fas fa-tag mr-2 text-gray-500"></i>
+            <div
+              v-for="category in categories"
+              :key="category.id"
+              class="category-pill cursor-pointer px-4 py-2 bg-gray-100 dark:bg-gray-700
+                     rounded-full flex items-center text-gray-700 dark:text-gray-200"
+              :class="{
+                'bg-indigo-100 border border-indigo-300 dark:bg-indigo-900/40 dark:border-indigo-600':
+                  selectedCategory === category.id
+              }"
+              @click="selectCategory(category)"
+            >
+              <i class="fas fa-tag mr-2 text-gray-500 dark:text-gray-300"></i>
               <span>{{ category.name }}</span>
             </div>
           </div>
         </div>
 
-<!-- Existing File -->
-<div class="mb-6">
-  <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
-    <i class="fas fa-file mr-2 text-indigo-500"></i> Existing File
-  </h2>
-  <div v-if="props.archive.file" class="flex items-center justify-between p-2 bg-gray-50 rounded">
-    <div class="flex items-center">
-      <i class="fas fa-file text-indigo-500 mr-3"></i>
-      <div>
-        <div class="font-medium text-gray-800">{{ props.archive.name }}</div>
-        <div class="text-xs text-gray-500">{{ formatFileSize(props.archive.file.size) }}</div>
-      </div>
-    </div>
-  </div>
-  <div v-else class="text-gray-500">No file uploaded.</div>
-</div>
-
-<!-- File Upload Area -->
-<div class="mb-6">
-  <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
-    <i class="fas fa-cloud-upload-alt mr-2 text-indigo-500"></i> Replace/Add File
-  </h2>
-  <div class="file-drop-area p-8 text-center">
-    <div class="flex flex-col items-center justify-center">
-      <i class="fas fa-cloud-upload-alt text-5xl text-indigo-400 mb-4"></i>
-      <p class="text-gray-600 mb-2">Drag & drop a new file here</p>
-      <p class="text-gray-500 text-sm mb-4">or</p>
-      <label for="fileInput"
-        class="cursor-pointer px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
-        Browse File
-      </label>
-      <input type="file" id="fileInput" class="hidden" @change="handleFiles">
-    </div>
-  </div>
-  <div v-if="selectedFiles.length > 0" class="mt-4">
-    <h3 class="font-medium text-gray-700 mb-2">Selected File:</h3>
-    <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
-      <div class="flex items-center">
-        <i class="fas fa-file text-indigo-500 mr-3"></i>
-        <div>
-          <div class="font-medium text-gray-800">{{ selectedFiles[0].name }}</div>
-          <div class="text-xs text-gray-500">{{ formatFileSize(selectedFiles[0].size) }}</div>
+        <!-- Existing File -->
+        <div class="mb-6">
+          <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center">
+            <i class="fas fa-file mr-2 text-indigo-500"></i> Existing File
+          </h2>
+          <div
+            v-if="props.archive.file"
+            class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded"
+          >
+            <div class="flex items-center">
+              <i class="fas fa-file text-indigo-500 mr-3"></i>
+              <div>
+                <div class="font-medium text-gray-800 dark:text-gray-100">{{ props.archive.name }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-300">
+                  {{ formatFileSize(props.archive.file.size) }}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="text-gray-500 dark:text-gray-400">No file uploaded.</div>
         </div>
-      </div>
-      <button @click="removeFile" type="button" class="text-red-500 hover:text-red-700">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-  </div>
-</div>
 
+        <!-- File Upload Area -->
+        <div class="mb-6">
+          <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center">
+            <i class="fas fa-cloud-upload-alt mr-2 text-indigo-500"></i> Replace/Add File
+          </h2>
+          <div
+            class="file-drop-area p-8 text-center bg-white dark:bg-gray-700 dark:border-gray-600 rounded"
+          >
+            <div class="flex flex-col items-center justify-center">
+              <i class="fas fa-cloud-upload-alt text-5xl text-indigo-400 mb-4"></i>
+              <p class="text-gray-600 dark:text-gray-300 mb-2">Drag & drop a new file here</p>
+              <p class="text-gray-500 dark:text-gray-400 text-sm mb-4">or</p>
+              <label
+                for="fileInput"
+                class="cursor-pointer px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+              >
+                Browse File
+              </label>
+              <input type="file" id="fileInput" class="hidden" @change="handleFiles" />
+            </div>
+          </div>
+
+          <div v-if="selectedFiles.length > 0" class="mt-4">
+            <h3 class="font-medium text-gray-700 dark:text-gray-200 mb-2">Selected File:</h3>
+            <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
+              <div class="flex items-center">
+                <i class="fas fa-file text-indigo-500 mr-3"></i>
+                <div>
+                  <div class="font-medium text-gray-800 dark:text-gray-100">{{ selectedFiles[0].name }}</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-300">
+                    {{ formatFileSize(selectedFiles[0].size) }}
+                  </div>
+                </div>
+              </div>
+              <button
+                @click="removeFile"
+                type="button"
+                class="text-red-500 hover:text-red-700 dark:hover:text-red-400"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        </div>
 
         <!-- Submit -->
         <div class="mt-4 flex justify-end">
-          <button type="button" @click="submitEdit"
-            class="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition flex items-center">
+          <button
+            type="button"
+            @click="submitEdit"
+            class="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition flex items-center"
+          >
             <i class="fas fa-save mr-2"></i> Save Changes
           </button>
         </div>
@@ -233,6 +270,7 @@ try {
     </div>
   </AppLayout>
 </template>
+
 
 <style scoped>
 .file-drop-area {

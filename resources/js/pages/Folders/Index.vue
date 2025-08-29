@@ -171,24 +171,40 @@ function sendToUsers() {
   <Head title="Folders" />
   <AppLayout :breadcrumbs="breadcrumbs">
     <!-- Flash messages -->
-    <div v-if="responseMessage" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded shadow-lg">
+    <div
+      v-if="responseMessage"
+      class="fixed top-4 left-1/2 transform -translate-x-1/2
+             bg-green-500 text-white px-6 py-3 rounded shadow-lg
+             dark:bg-green-600"
+    >
       {{ responseMessage }}
     </div>
-    <div v-if="errorMessage" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded shadow-lg">
+    <div
+      v-if="errorMessage"
+      class="fixed top-4 left-1/2 transform -translate-x-1/2
+             bg-red-500 text-white px-6 py-3 rounded shadow-lg
+             dark:bg-red-600"
+    >
       {{ errorMessage }}
     </div>
 
     <!-- Create new folder button -->
     <div class="mb-4">
-      <button @click="openModal" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center">
+      <button
+        @click="openModal"
+        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center"
+      >
         <i class="fas fa-plus mr-2"></i> New Folder
       </button>
     </div>
 
     <!-- Folder Table -->
-    <div v-if="props.folders.data.length" class="bg-white rounded-xl shadow-md p-6">
-      <table class="w-full text-sm text-left text-gray-500">
-        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+    <div
+      v-if="props.folders.data.length"
+      class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6"
+    >
+      <table class="w-full text-sm text-left text-gray-500 dark:text-gray-300">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-200">
           <tr>
             <th class="px-6 py-3">Name</th>
             <th class="px-6 py-3">Date Modified</th>
@@ -198,7 +214,11 @@ function sendToUsers() {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="folder in props.folders.data" :key="folder.id" class="hover:bg-gray-50">
+          <tr
+            v-for="folder in props.folders.data"
+            :key="folder.id"
+            class="hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
             <td class="px-6 py-4 flex items-center">
               <i class="fas fa-folder text-yellow-500 mr-2"></i>{{ folder.name }}
             </td>
@@ -206,26 +226,59 @@ function sendToUsers() {
             <td class="px-6 py-4">Folder</td>
             <td class="px-6 py-4">{{ formatFileSize(folder.size) }}</td>
             <td class="px-6 py-4 flex space-x-2">
-              <a :href="route('folders.show', folder.id)" class="text-blue-500 hover:text-blue-700"><i class="fas fa-folder-open"></i></a>
-              <button @click="openShareModal(folder)" class="text-green-500 hover:text-green-700"><i class="fas fa-share-alt"></i></button>
-              <button @click="confirmDelete(folder.id)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash-alt"></i></button>
-              <button @click="openEditModal(folder)" class="text-yellow-500 hover:text-yellow-700"><i class="fas fa-edit"></i></button>
+              <a
+                :href="route('folders.show', folder.id)"
+                class="text-blue-500 hover:text-blue-700"
+              >
+                <i class="fas fa-folder-open"></i>
+              </a>
+              <button
+                @click="openShareModal(folder)"
+                class="text-green-500 hover:text-green-700"
+              >
+                <i class="fas fa-share-alt"></i>
+              </button>
+              <button
+                @click="confirmDelete(folder.id)"
+                class="text-red-500 hover:text-red-700"
+              >
+                <i class="fas fa-trash-alt"></i>
+              </button>
+              <button
+                @click="openEditModal(folder)"
+                class="text-yellow-500 hover:text-yellow-700"
+              >
+                <i class="fas fa-edit"></i>
+              </button>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <p v-else class="text-gray-500">No folders found.</p>
+    <p v-else class="text-gray-500 dark:text-gray-400">No folders found.</p>
 
     <!-- Create Modal -->
     <transition name="modal">
       <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
-          <h2 class="text-lg font-semibold mb-4">Yangi papka yaratish</h2>
-          <input v-model="newFolderName" type="text" placeholder="Enter folder name" class="border rounded px-3 py-2 w-full mb-4" />
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-sm w-full">
+          <h2 class="text-lg font-semibold mb-4 dark:text-gray-100">Yangi papka yaratish</h2>
+          <input
+            v-model="newFolderName"
+            type="text"
+            placeholder="Enter folder name"
+            class="border rounded px-3 py-2 w-full mb-4
+                   bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+          />
           <div class="flex justify-end space-x-2">
-            <button @click="closeModal" class="px-4 py-2 bg-gray-200 rounded">Bekor qilish</button>
-            <button @click="createFolder" class="px-4 py-2 bg-blue-500 text-white rounded">Saqlash</button>
+            <button
+              @click="closeModal"
+              class="px-4 py-2 bg-gray-200 rounded dark:bg-gray-600 dark:text-gray-200"
+            >
+              Bekor qilish
+            </button>
+            <button @click="createFolder" class="px-4 py-2 bg-blue-500 text-white rounded">
+              Saqlash
+            </button>
           </div>
         </div>
       </div>
@@ -234,12 +287,25 @@ function sendToUsers() {
     <!-- Edit Modal -->
     <transition name="modal">
       <div v-if="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
-          <h2 class="text-lg font-semibold mb-4">Papka nomini o‘zgartirish</h2>
-          <input v-model="editFolderName" type="text" placeholder="Enter new folder name" class="border rounded px-3 py-2 w-full mb-4" />
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-sm w-full">
+          <h2 class="text-lg font-semibold mb-4 dark:text-gray-100">Papka nomini o‘zgartirish</h2>
+          <input
+            v-model="editFolderName"
+            type="text"
+            placeholder="Enter new folder name"
+            class="border rounded px-3 py-2 w-full mb-4
+                   bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+          />
           <div class="flex justify-end space-x-2">
-            <button @click="closeEditModal" class="px-4 py-2 bg-gray-200 rounded">Bekor qilish</button>
-            <button @click="updateFolder" class="px-4 py-2 bg-blue-500 text-white rounded">Yangilash</button>
+            <button
+              @click="closeEditModal"
+              class="px-4 py-2 bg-gray-200 rounded dark:bg-gray-600 dark:text-gray-200"
+            >
+              Bekor qilish
+            </button>
+            <button @click="updateFolder" class="px-4 py-2 bg-blue-500 text-white rounded">
+              Yangilash
+            </button>
           </div>
         </div>
       </div>
@@ -248,40 +314,70 @@ function sendToUsers() {
     <!-- Share Modal -->
     <transition name="modal">
       <div v-if="shareModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
-          <h2 class="text-lg font-semibold mb-4">Papkani ulash</h2>
-          <p class="mb-4"><strong>Papka nomi:</strong> {{ sharingFolderName }}</p>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full">
+          <h2 class="text-lg font-semibold mb-4 dark:text-gray-100">Papkani ulash</h2>
+          <p class="mb-4 dark:text-gray-200">
+            <strong>Papka nomi:</strong> {{ sharingFolderName }}
+          </p>
 
-          <input type="datetime-local" v-model="expiresAt" class="border rounded px-3 py-2 w-full mb-3" />
-          <input type="text" v-model="password" placeholder="Parol (ixtiyoriy)" class="border rounded px-3 py-2 w-full mb-3" />
+          <input
+            type="datetime-local"
+            v-model="expiresAt"
+            class="border rounded px-3 py-2 w-full mb-3
+                   bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+          />
+          <input
+            type="text"
+            v-model="password"
+            placeholder="Parol (ixtiyoriy)"
+            class="border rounded px-3 py-2 w-full mb-3
+                   bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+          />
 
           <div class="flex space-x-2 mb-3">
-            <button @click="generateUrl" class="px-4 py-2 bg-blue-500 text-white rounded">Generate URL</button>
-            <input v-if="generatedUrl" v-model="generatedUrl" readonly class="border px-3 py-2 rounded w-full" />
+            <button @click="generateUrl" class="px-4 py-2 bg-blue-500 text-white rounded">
+              Generate URL
+            </button>
+            <input
+              v-if="generatedUrl"
+              v-model="generatedUrl"
+              readonly
+              class="border px-3 py-2 rounded w-full
+                     bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+            />
           </div>
 
           <div v-if="generatedUrl" class="mb-3">
-            <label class="block text-sm mb-1">Select Users</label>
+            <label class="block text-sm mb-1 dark:text-gray-200">Select Users</label>
             <Multiselect
-  v-model="selectedUsers"
-  :options="users"
-  mode="tags"
-  label="name"
-  track-by="id"
-  value-prop="id"
-  placeholder="Foydalanuvchilarni tanlang"
-/>
-
-
-
+              v-model="selectedUsers"
+              :options="users"
+              mode="tags"
+              label="name"
+              track-by="id"
+              value-prop="id"
+              placeholder="Foydalanuvchilarni tanlang"
+            />
           </div>
 
           <div class="flex justify-end space-x-2">
-            <button @click="closeShareModal" class="px-4 py-2 bg-gray-200 rounded">Bekor qilish</button>
-            <button v-if="generatedUrl" @click="sendToUsers" class="px-4 py-2 bg-green-500 text-white rounded">Jo‘natish</button>
+            <button
+              @click="closeShareModal"
+              class="px-4 py-2 bg-gray-200 rounded dark:bg-gray-600 dark:text-gray-200"
+            >
+              Bekor qilish
+            </button>
+            <button
+              v-if="generatedUrl"
+              @click="sendToUsers"
+              class="px-4 py-2 bg-green-500 text-white rounded dark:bg-green-600"
+            >
+              Jo‘natish
+            </button>
           </div>
         </div>
       </div>
     </transition>
   </AppLayout>
 </template>
+
