@@ -32,10 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/shares', [ShareController::class, 'index'])->name('shares.index');
     Route::get('/s/document/{token}', [ShareController::class, 'downloadByToken'])->name('shares.download.token');
     Route::get('/shares/received', [ShareController::class, 'received'])->name('shares.received');
-
-    // Route::get('asd',function(){
-    //     return DB::table('shares')->get('url');
-    // });
+    Route::delete('/shareable/{id}', [ShareController::class,'destroy'])->name('shares.delete');
 });
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

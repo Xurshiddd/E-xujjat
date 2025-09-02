@@ -91,7 +91,7 @@ function formatDate(dateStr: string | null | undefined): string {
           <tr
             v-for="(share, index) in props.shares"
             :key="share.id"
-            class="hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100"
+            class="hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100 text-center"
           >
             <td class="p-2 border dark:border-gray-700">{{ index + 1 }}</td>
             <td class="p-2 border dark:border-gray-700">{{ share.sender_name }}</td>

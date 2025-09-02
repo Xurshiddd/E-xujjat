@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head } from '@inertiajs/vue3'
-
+import axios from 'axios'
 const props = defineProps<{
   shares: {
     id: number,
@@ -12,6 +12,14 @@ const props = defineProps<{
     receivers: string[]
   }[]
 }>()
+function shareDel(id: number): void {
+    axios.delete(`/shareable/${id}`)
+    .then(() => window.location.reload())
+    .catch(() => alert("O'chirishda xato yuz berdi."))
+}
+function delConfirm (id: number): void {
+    if (confirm("O‘chirishga ishonchingiz komilmi?")) shareDel(id)
+}
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "Cheksiz";
 
@@ -73,13 +81,7 @@ function formatDate(dateStr: string | null | undefined): string {
               {{ formatDate(share.expires_at) }}
             </td>
             <td class="p-2 border dark:border-gray-700">
-              <a
-                :href="share.url"
-                target="_blank"
-                class="text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                {{ share.url }}
-              </a>
+              <button type="button" @click="delConfirm(share.id)" class="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-800">Delete</button>
             </td>
           </tr>
         </tbody>

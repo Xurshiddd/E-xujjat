@@ -7,6 +7,7 @@ use App\Models\Share;
 use App\Services\ShareService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 
 class ShareController extends Controller
@@ -67,9 +68,16 @@ class ShareController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Share $share)
+    public function destroy($id)
     {
-        //
+        $share = Share::findOrFail( $id );
+        if ($share->user_id != Auth::user()->id) {
+            return response()->json([
+                'error'=> 'Siz bu malumotni o\'chira olmaysiz'
+                ]);
+        }
+        $share->delete();
+        return response()->json(['status' => 'ok']);
     }
     public function generateurl(Request $request, $id)
     {
