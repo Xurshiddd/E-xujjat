@@ -1,10 +1,16 @@
 <script setup lang="ts">
+import {type BreadcrumbItem } from '@/types'
 import { Head } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 import axios from 'axios'
 import { ref } from 'vue'
 import Multiselect from "@vueform/multiselect"
 import "@vueform/multiselect/themes/default.css"
+
+const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'Papkalar', href: '/folders' },
+  { title: 'Papka', href: '/folders/{id}' }
+]
 
 type File = {
   id: number
@@ -108,8 +114,8 @@ function sendToUsers() {
 
 <template>
   <Head title="Arxivlar" />
-  <AppLayout>
-    <div class="container mx-auto px-4 py-8 max-w-6xl">
+  <AppLayout :breadcrumbs="breadcrumbs">
+    <div class="px-4 py-8">
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Arxivlar ro‘yxati</h1>
         <a href="/archives/create"

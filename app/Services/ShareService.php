@@ -102,7 +102,7 @@ class ShareService
             )
             ->join('shares as s', 'sh.share_id', '=', 's.id')
             ->join('users as u', 's.user_id', '=', 'u.id')
-            ->where('sh.resiver_id', 2)
+            ->where('sh.resiver_id', auth()->id())
             ->orderByDesc('s.id')
             ->get();
 
