@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
+import {type BreadcrumbItem } from '@/types'
 
+
+const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'Papkalar', href: '/folders' },
+  { title: 'Papka', href: '/folders/{id}' }
+]
 const props = defineProps<{
   folder: {
     id: number
@@ -15,7 +21,7 @@ const props = defineProps<{
 
 <template>
   <Head :title="props.folder.name" />
-  <AppLayout>
+  <AppLayout :breadcrumbs="breadcrumbs">
     <div>
       <a :href="route('folders.index')" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg m-4 transition-colors">Ortga</a>
     </div>

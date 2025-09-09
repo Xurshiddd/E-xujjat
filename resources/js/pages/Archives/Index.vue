@@ -8,8 +8,7 @@ import Multiselect from "@vueform/multiselect"
 import "@vueform/multiselect/themes/default.css"
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Papkalar', href: '/folders' },
-  { title: 'Papka', href: '/folders/{id}' }
+  { title: 'Arxivlar', href: '/archives' }
 ]
 
 type File = {
