@@ -50,7 +50,7 @@ class HemisAuthController extends Controller
             }
             $user = User::create([
                 'name' => $userData['name'],
-                'email' => $userData['email'] ?? strtolower($userData['firstname']).'@gmail.com', 
+                'email' => $userData['email'] ?? $userData['employee_id_number'].'@gmail.com', 
                 'password' => Hash::make($userData['passport_number']), // Temporary password
                 'hemis_id_number' => $userData['employee_id_number'],
                 'is_admin' => false, // Default value, adjust as needed
