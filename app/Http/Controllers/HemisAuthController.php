@@ -66,7 +66,7 @@ class HemisAuthController extends Controller
             return redirect()->route('dashboard');
         }catch (\Exception $e) {
             Log::error('Failed to login with Hemis', [
-                'error_message' => $e->getMessage(),
+                'error_message' => $e->getMessage(), $userData
             ]);
             return redirect()->route('home')->withErrors(['error' => 'Failed to login with Hemis: ' . $e->getMessage()]);
         }
