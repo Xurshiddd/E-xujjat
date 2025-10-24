@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace App\Http\Controllers;
 
 use App\Services\HemisOAuthClientService;
@@ -32,7 +32,7 @@ class HemisAuthController extends Controller
             $accessToken = $this->service->provider()->getAccessToken('authorization_code', [
                 'code' => $request->code
             ]);
-            
+
             $resourceOwner = $this->service->provider()->getResourceOwner($accessToken);
             $userData = $resourceOwner->toArray();
             if (!$userData) {
@@ -50,7 +50,7 @@ class HemisAuthController extends Controller
             }
             $user = User::create([
                 'name' => $userData['name'],
-                'email' => $userData['email'] ?? $userData['employee_id_number'].'@gmail.com', 
+                'email' => $userData['email'] ?? $userData['employee_id_number'].'@gmail.com',
                 'password' => Hash::make($userData['passport_number']), // Temporary password
                 'hemis_id_number' => $userData['employee_id_number'],
                 'is_admin' => false, // Default value, adjust as needed
@@ -65,6 +65,9 @@ class HemisAuthController extends Controller
             Auth::login($user);
             return redirect()->route('dashboard');
         }catch (\Exception $e) {
+            Log::error('Failed to login with Hemis', [
+                'error_message' => $e->getMessage(),
+            ]);
             return redirect()->route('home')->withErrors(['error' => 'Failed to login with Hemis: ' . $e->getMessage()]);
         }
     }
